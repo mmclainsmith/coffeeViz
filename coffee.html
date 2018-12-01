@@ -1,84 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <style>
-        body {
-            background: #fcfcfa;
-        }
-        .stroke {
-            fill: none;
-            stroke: #000;
-            stroke-width: 3px;
-        }
-        .fill {
-            fill: #fff;
-        }
-        .graticule {
-            fill: none;
-            stroke: #777;
-            stroke-width: .5px;
-            stroke-opacity: .5;
-        }
-        .land {
-            fill: #222;
-        }
-        .boundary {
-            fill: none;
-            stroke: #fff;
-            stroke-width: .5px;
-        }
-    </style>
+<meta charset="utf-8">
+<style>
+    body {
+        background: #fcfcfa;
+    }
+    .stroke {
+        fill: none;
+        stroke: #000;
+        stroke-width: 3px;
+    }
+    .fill {
+        fill: #fff;
+    }
+    .graticule {
+        fill: none;
+        stroke: #777;
+        stroke-width: .5px;
+        stroke-opacity: .5;
+    }
+    .land {
+        fill: #222;
+    }
+    .boundary {
+        fill: none;
+        stroke: #fff;
+        stroke-width: .5px;
+    }
+</style>
 </head>
 
 <body>
-    <svg width="960" height="600" id="main"></svg>
+<svg width="960" height="600" id="main"></svg>
 
 
-    <script src="js/d3.v4.min.js"></script>
-    <script src="js/topojson.v1.min.js"></script>
-    <script type="text/javascript" src="line_test_data.js"></script>
+<script src="js/d3.v4.min.js"></script>
+<script src="js/topojson.v1.min.js"></script>
 
-    <script>
-        //Stuff here!
-        var width = 960,
-        height = 580;
+<script>
+    let svg = d3.select("#main"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
 
-        var svg = d3.select("#main");
+    let dataByYear = d3.nest();
+    let dataByCountry = d3.nest();
 
-        var projection = d3.geoMercator()
-                            .scale(170)
-                            .translate([width / 2, height / 2])
-                            .precision(.1);
+    let countryCode = d3.map()
 
-        var path = d3.geoPath().projection(projection);
+    let projection = d3.geoMercator()
+                        .scale(170)
+                        .translate([width / 2, height / 2])
+                        .precision(.1);
 
-        var graticule = d3.geoGraticule();
+    let path = d3.geoPath().projection(projection);
 
-        svg.append("path")
-            .datum(graticule)
-            .attr("class", "graticule")
-            .attr("d", path);
+    let graticule = d3.geoGraticule();
 
-        d3.queue()
-            .defer(d3.json, "https://unpkg.com/world-atlas@1/world/110m.json")
-            .await(ready);
+    svg.append("path")
+        .datum(graticule)
+        .attr("class", "graticule")
+        .attr("d", path);
 
-        function ready(error, world) {
-            if (error) throw error;
 
-            var countries = topojson.feature(world, world.objects.countries).features;
+/******************************************************************************
+            Reading in data
+ *****************************************************************************/
+    d3.queue()
+        .defer(d3.json, "https://unpkg.com/world-atlas@1/world/110m.json")
+        .defer(d3.csv, "ICO_CROP_DATA.csv", function(d){
+            let month_abv = {"April":'apr', "July":'jul', "October":'oct'};
+            let data = {};
+            data.country = d.COUNTRY;
+            data.prod = +d.TOTAL_PRODUCTION;
+            data.consum = +d.DOMESTIC_CONSUMPTION;
+            data.export = +d.EXPORTABLE_PRODUCTION;
+            data.stock = +d.GROSS_OPENING_STOCKS;
+            data.year = +d.YEAR.slice(0,4);
+            data.month = month_abv[d.MONTH];
+            return data
+         })
+        .defer(d3.csv, "countries.csv", function(d) { //country code -> name
+             countryCode.set(d.id, d.name);
+        })
+        .await(ready);
 
-            svg.selectAll(".country")
-                .data(countries)
-                .enter().insert("path", ".graticule")
-                .attr("class", "country")
-                .attr("d", path)
-                .style("fill", "grey");
-        };
+/******************************************************************************
+            Initializing page
+ *****************************************************************************/
 
-        console.log(fakeData())
+    function ready(error, world, data) {
+        if (error) throw error;
 
-    </script>
+        // Use nest to group data by year and country for future reference
+        dataByYear = dataByYear
+            .key(function(d) { return d.year; })
+            .key(function(d) { return d.country; })
+            .object(data);
+
+        dataByCountry = dataByCountry
+            .key(function(d) { return d.country; })
+            .key(function(d) { return d.year; })
+            .object(data);
+
+        console.log(dataByCountry);
+
+        let countries = topojson.feature(world, world.objects.countries).features;
+
+        svg.selectAll(".country")
+            .data(countries)
+            .enter().insert("path", ".graticule")
+            .attr("class", "country")
+            .attr("d", path)
+            .style("fill", "grey");
+
+        drawLineChart("Ethiopia");
+    };
+
+/*****************************************************************************
+                Interactions Handlers
+ *****************************************************************************/
+
+/*****************************************************************************
+                Chart Makers
+ *****************************************************************************/
+
+    // Note example drawLineChart above - it needs to be run in the function ready()
+    function drawLineChart(countryName) {
+        let data = dataByCountry[countryName];
+        console.log(data[1990][0]); //Get data from 1990
+        console.log(data[1990][0].month); //see month of that data
+        console.log(data[1990][0].consum); //see consumption in that year
+    }
+
+</script>
 </body>
 </html>
