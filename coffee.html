@@ -35,7 +35,7 @@
 </head>
 
 <body>
-<svg width="960" height="600" id="main"></svg>
+<svg width="980" height="270" id="main"></svg>
 <div id="selected"></div>
 
 <script src="js/d3.v4.min.js"></script>
@@ -49,9 +49,9 @@
     let dataByCountry = d3.nest();
 
     let projection = d3.geoMercator()
-                        .scale(170)
-                        .translate([width / 2, height / 2])
-                        .precision(.1);
+                        .scale(200)
+                        .translate([ 422, height / 2])
+                        .precision(0);
 
     let path = d3.geoPath().projection(projection);
 
@@ -60,7 +60,9 @@
     svg.append("path")
         .datum(graticule)
         .attr("class", "graticule")
-        .attr("d", path);
+        .attr("d", path)
+
+    svg.on("click", function(d){selected = []; updatedSelected(); });
 
 
 /******************************************************************************
@@ -122,7 +124,7 @@
     let selected = []
     function updatedSelected() {
      //Update Map
-        d3.selectAll('.country')
+        d3.selectAll('.clickable')
             .classed('selected', function(d) {
                 return selected.includes(d.name);
             })
@@ -151,17 +153,20 @@
     }
 
     function endCountrySelect(d){
+        console.log(d3.event)
         console.log("end");
-        select([d.name]);
+        select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
     function clickCountrySelect(d) {
-        select([d.name]);
+        console.log(d3.event)
+        select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
-    function select(nameList) {
+    function select(nameList, shift) {
         for (let i = 0; i < nameList.length; i++) {
-            if (d3.event.shiftKey) {
+            if (shift) {
+                console.log('shirt')
                 console.log(nameList[i])
                 console.log(nameList[i])
                 console.log(selected)
@@ -172,7 +177,7 @@
                     selected.splice(index);
                 }
             } else {
-                selected = [nameList]
+                selected = nameList
             }
         }
         updatedSelected()
