@@ -28,12 +28,15 @@
         stroke: #fff;
         stroke-width: .5px;
     }
+    .selected {
+        stroke: black;
+    }
 </style>
 </head>
 
 <body>
 <svg width="960" height="600" id="main"></svg>
-
+<div id="selected"></div>
 
 <script src="js/d3.v4.min.js"></script>
 <script src="js/topojson.v1.min.js"></script>
@@ -43,10 +46,7 @@
         width = +svg.attr("width"),
         height = +svg.attr("height");
 
-    let dataByYear = d3.nest();
     let dataByCountry = d3.nest();
-
-    let countryCode = d3.map()
 
     let projection = d3.geoMercator()
                         .scale(170)
@@ -67,7 +67,7 @@
             Reading in data
  *****************************************************************************/
     d3.queue()
-        .defer(d3.json, "https://unpkg.com/world-atlas@1/world/110m.json")
+        .defer(d3.json, "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
         .defer(d3.csv, "ICO_CROP_DATA.csv", function(d){
             let month_abv = {"April":'apr', "July":'jul', "October":'oct'};
             let data = {};
@@ -80,9 +80,6 @@
             data.month = month_abv[d.MONTH];
             return data
          })
-        .defer(d3.csv, "countries.csv", function(d) { //country code -> name
-             countryCode.set(d.id, d.name);
-        })
         .await(ready);
 
 /******************************************************************************
@@ -92,27 +89,29 @@
     function ready(error, world, data) {
         if (error) throw error;
 
-        // Use nest to group data by year and country for future reference
-        dataByYear = dataByYear
-            .key(function(d) { return d.year; })
-            .key(function(d) { return d.country; })
-            .object(data);
-
         dataByCountry = dataByCountry
             .key(function(d) { return d.country; })
             .key(function(d) { return d.year; })
             .object(data);
 
-        console.log(dataByCountry);
-
-        let countries = topojson.feature(world, world.objects.countries).features;
-
+        // Draw countries
         svg.selectAll(".country")
-            .data(countries)
+            .data(world.features)
             .enter().insert("path", ".graticule")
-            .attr("class", "country")
-            .attr("d", path)
-            .style("fill", "grey");
+                .attr("class", "country")
+                .attr("d", path)
+                .style("fill", "lightgrey")
+                .classed("clickable", function(d) { return dataByCountry[d.properties.name]; })
+
+        svg.selectAll(".clickable")
+                .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
+                .style("fill", "grey")
+                //.on("click", clickCountrySelect)
+                .call(d3.drag()
+                    .on("start", startCountrySelect)
+                    .on("drag", dragCountrySelect)
+                    .on("end", endCountrySelect));
+
 
         drawLineChart("Ethiopia");
     };
@@ -120,7 +119,64 @@
 /*****************************************************************************
                 Interactions Handlers
  *****************************************************************************/
+    let selected = []
+    function updatedSelected() {
+     //Update Map
+        d3.selectAll('.country')
+            .classed('selected', function(d) {
+                return selected.includes(d.name);
+            })
+         d3.selectAll('.selected').raise();
 
+     //Update bar
+        d3.selectAll("#selected a").remove();
+        d3.select("#selected").selectAll("a")
+            .data(selected)
+            .enter().append("a")
+                //.on("click", function)
+                .html(function(d){
+                     console.log(d);
+                     return d;
+                })
+    }
+
+    function startCountrySelect(d){
+        console.log("start");
+        d3.select("#main")
+            .append("rect");
+    }
+
+    function dragCountrySelect(d){
+        console.log("dragging");
+    }
+
+    function endCountrySelect(d){
+        console.log("end");
+        select([d.name]);
+    }
+
+    function clickCountrySelect(d) {
+        select([d.name]);
+    }
+
+    function select(nameList) {
+        for (let i = 0; i < nameList.length; i++) {
+            if (d3.event.shiftKey) {
+                console.log(nameList[i])
+                console.log(nameList[i])
+                console.log(selected)
+                index = selected.indexOf(nameList[i]);
+                if (index == -1) { //Id not in list
+                    selected.push(nameList[i]);
+                } else {
+                    selected.splice(index);
+                }
+            } else {
+                selected = [nameList]
+            }
+        }
+        updatedSelected()
+    }
 /*****************************************************************************
                 Chart Makers
  *****************************************************************************/
