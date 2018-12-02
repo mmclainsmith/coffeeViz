@@ -1,82 +1,192 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <style>
-        body {
-            background: #fcfcfa;
-        }
-        .stroke {
-            fill: none;
-            stroke: #000;
-            stroke-width: 3px;
-        }
-        .fill {
-            fill: #fff;
-        }
-        .graticule {
-            fill: none;
-            stroke: #777;
-            stroke-width: .5px;
-            stroke-opacity: .5;
-        }
-        .land {
-            fill: #222;
-        }
-        .boundary {
-            fill: none;
-            stroke: #fff;
-            stroke-width: .5px;
-        }
-    </style>
+<meta charset="utf-8">
+<style>
+    body {
+        background: #fcfcfa;
+    }
+    .stroke {
+        fill: none;
+        stroke: #000;
+        stroke-width: 3px;
+    }
+    .fill {
+        fill: #fff;
+    }
+    .graticule {
+        fill: none;
+        stroke: #777;
+        stroke-width: .5px;
+        stroke-opacity: .5;
+    }
+    .land {
+        fill: #222;
+    }
+    .boundary {
+        fill: none;
+        stroke: #fff;
+        stroke-width: .5px;
+    }
+    .selected {
+        stroke: black;
+    }
+</style>
 </head>
 
 <body>
-    <svg width="960" height="600" id="main"></svg>
+<svg width="980" height="270" id="main"></svg>
+<div id="selected"></div>
+
+<script src="js/d3.v4.min.js"></script>
+<script src="js/topojson.v1.min.js"></script>
+
+<script>
+    let svg = d3.select("#main"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+    let dataByCountry = d3.nest();
+
+    let projection = d3.geoMercator()
+                        .scale(200)
+                        .translate([ 422, height / 2])
+                        .precision(0);
+
+    let path = d3.geoPath().projection(projection);
+
+    let graticule = d3.geoGraticule();
+
+    svg.append("path")
+        .datum(graticule)
+        .attr("class", "graticule")
+        .attr("d", path)
+
+    svg.on("click", function(d){selected = []; updatedSelected(); });
 
 
-    <script src="js/d3.v4.min.js"></script>
-    <script src="js/topojson.v1.min.js"></script>
-    <script type="text/javascript" src="line_test_data.js"></script>
+/******************************************************************************
+            Reading in data
+ *****************************************************************************/
+    d3.queue()
+        .defer(d3.json, "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
+        .defer(d3.csv, "ICO_CROP_DATA.csv", function(d){
+            let month_abv = {"April":'apr', "July":'jul', "October":'oct'};
+            let data = {};
+            data.country = d.COUNTRY;
+            data.prod = +d.TOTAL_PRODUCTION;
+            data.consum = +d.DOMESTIC_CONSUMPTION;
+            data.export = +d.EXPORTABLE_PRODUCTION;
+            data.stock = +d.GROSS_OPENING_STOCKS;
+            data.year = +d.YEAR.slice(0,4);
+            data.month = month_abv[d.MONTH];
+            return data
+         })
+        .await(ready);
 
-    <script>
-        //Stuff here!
-        var width = 960,
-        height = 580;
+/******************************************************************************
+            Initializing page
+ *****************************************************************************/
 
-        var svg = d3.select("#main");
+    function ready(error, world, data) {
+        if (error) throw error;
 
-        var projection = d3.geoMercator()
-                            .scale(170)
-                            .translate([width / 2, height / 2])
-                            .precision(.1);
+        dataByCountry = dataByCountry
+            .key(function(d) { return d.country; })
+            .key(function(d) { return d.year; })
+            .object(data);
 
-        var path = d3.geoPath().projection(projection);
-
-        var graticule = d3.geoGraticule();
-
-        svg.append("path")
-            .datum(graticule)
-            .attr("class", "graticule")
-            .attr("d", path);
-
-        d3.queue()
-            .defer(d3.json, "https://unpkg.com/world-atlas@1/world/110m.json")
-            .await(ready);
-
-        function ready(error, world) {
-            if (error) throw error;
-
-            var countries = topojson.feature(world, world.objects.countries).features;
-
-            svg.selectAll(".country")
-                .data(countries)
-                .enter().insert("path", ".graticule")
+        // Draw countries
+        svg.selectAll(".country")
+            .data(world.features)
+            .enter().insert("path", ".graticule")
                 .attr("class", "country")
                 .attr("d", path)
-                .style("fill", "grey");
-        };
+                .style("fill", "lightgrey")
+                .classed("clickable", function(d) { return dataByCountry[d.properties.name]; })
 
+        svg.selectAll(".clickable")
+                .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
+                .style("fill", "grey")
+                //.on("click", clickCountrySelect)
+                .call(d3.drag()
+                    .on("start", startCountrySelect)
+                    .on("drag", dragCountrySelect)
+                    .on("end", endCountrySelect));
+
+
+        drawLineChart("Ethiopia");
+    };
+
+/*****************************************************************************
+                Interactions Handlers
+ *****************************************************************************/
+    let selected = []
+    function updatedSelected() {
+     //Update Map
+        d3.selectAll('.clickable')
+            .classed('selected', function(d) {
+                return selected.includes(d.name);
+            })
+         d3.selectAll('.selected').raise();
+
+     //Update bar
+        d3.selectAll("#selected a").remove();
+        d3.select("#selected").selectAll("a")
+            .data(selected)
+            .enter().append("a")
+                //.on("click", function)
+                .html(function(d){
+                     console.log(d);
+                     return d;
+                })
+    }
+
+    function startCountrySelect(d){
+        console.log("start");
+        d3.select("#main")
+            .append("rect");
+    }
+
+    function dragCountrySelect(d){
+        console.log("dragging");
+    }
+
+    function endCountrySelect(d){
+        console.log(d3.event)
+        console.log("end");
+        select([d.name], d3.event.sourceEvent.shiftKey);
+    }
+
+    function clickCountrySelect(d) {
+        console.log(d3.event)
+        select([d.name], d3.event.sourceEvent.shiftKey);
+    }
+
+    function select(nameList, shift) {
+        for (let i = 0; i < nameList.length; i++) {
+            if (shift) {
+                console.log('shirt')
+                console.log(nameList[i])
+                console.log(nameList[i])
+                console.log(selected)
+                index = selected.indexOf(nameList[i]);
+                if (index == -1) { //Id not in list
+                    selected.push(nameList[i]);
+                } else {
+                    selected.splice(index);
+                }
+            } else {
+                selected = nameList
+            }
+        }
+        updatedSelected()
+    }
+/*****************************************************************************
+                Chart Makers
+ *****************************************************************************/
+
+<<<<<<< HEAD
         function drawLineChart(country_name) {
         	data = fakeData();
         	console.log(data);
@@ -84,7 +194,16 @@
         	//data[1990].apr.consum
         }
         drawLineChart("country");
+=======
+    // Note example drawLineChart above - it needs to be run in the function ready()
+    function drawLineChart(countryName) {
+        let data = dataByCountry[countryName];
+        console.log(data[1990][0]); //Get data from 1990
+        console.log(data[1990][0].month); //see month of that data
+        console.log(data[1990][0].consum); //see consumption in that year
+    }
+>>>>>>> 8cfade4fa7bb0cfaef02d000e350a80e47f3e2a0
 
-    </script>
+</script>
 </body>
 </html>
