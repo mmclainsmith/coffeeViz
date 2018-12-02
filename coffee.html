@@ -31,6 +31,12 @@
     .selected {
         stroke: black;
     }
+
+    .line {
+    	fill: none;
+    	stroke: blue;
+    	stroke-width: 2px;
+    }
 </style>
 </head>
 
@@ -188,10 +194,60 @@
 
     // Note example drawLineChart above - it needs to be run in the function ready()
     function drawLineChart(countryName) {
+    	// Ref: https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
         let data = dataByCountry[countryName];
+        console.log(data);
         console.log(data[1990][0]); //Get data from 1990
         console.log(data[1990][0].month); //see month of that data
         console.log(data[1990][0].consum); //see consumption in that year
+        console.log(data[1990][0].year); //see consumption in that year
+        
+        // dimensions of graph
+        var margin = {top: 20, right: 20, bottom: 30, left: 50},
+        	width = 960 - margin.left - margin.right,
+        	height = 500 - margin.top - margin.bottom;
+        // axis ranges
+        var x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
+        var y = d3.scaleLinear().domain([0, 2000]).range([height, 0]); //TODO: replace 200 with max consum value
+
+        // consumption line
+        var annualconsum = function(year) {
+        	var line = d3.line()
+        				.x(function(d) {return x(year); })
+        				.y(function(d) {return y(data[year][0].consum); });
+        	return line;
+        }
+
+        //append svg
+        var svg = d3.select("body").append("svg")
+        	.attr("width", width + margin.left + margin.right)
+        	.attr("height", 1000) //height + margin.top + margin.bottom)
+        .append("g")
+        	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        //loop through years
+    	for (let i = 1990; i < 2018; i++) {
+        	var consumline = annualconsum(i);
+	        svg.append("path")
+	        	.data([data])
+	        	.attr("class", "line")
+	        	.attr("d", consumline);
+	        }
+        /*
+        for (let i = 1990; i < 2018; i++) {
+        	var consumline = d3.line()
+	        	.x(function(d) {return x(i); })
+	        	.y(function(d) {return y(data[i][0].consum); });
+        }
+        */
+
+        // add the X Axis
+		  svg.append("g")
+		      .attr("transform", "translate(0," + height + ")")
+		      .call(d3.axisBottom(x));
+		// add the Y Axis
+		  svg.append("g")
+		      .call(d3.axisLeft(y));
     }
 
 </script>
