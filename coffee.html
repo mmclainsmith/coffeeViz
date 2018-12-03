@@ -31,11 +31,26 @@
     .selected {
         stroke: black;
     }
+
+    .down {
+        background-color: grey;
+    }
+
+    .country {
+        fill: lightgrey;
+    }
+
+    .clickable {
+        fill: grey;
+    }
 </style>
 </head>
 
 <body>
 <svg width="980" height="270" id="main"></svg>
+<div class ="monthFilterButton down" id="apr"> April </div>
+<div class ="monthFilterButton down" id="jul"> July </div>
+<div class ="monthFilterButton down" id="oct"> October </div>
 <div id="selected"></div>
 
 <script src="js/d3.v4.min.js"></script>
@@ -57,10 +72,19 @@
 
     let graticule = d3.geoGraticule();
 
+    d3.selectAll(".monthFilterButton")
+        .on("click", function(d) {
+            btn = d3.select(this)
+            btn.classed('down', function(d){
+                return !d3.select(this).classed("down");
+            });
+            filterByMonth(btn.attr('id'))
+        });
+
     svg.append("path")
         .datum(graticule)
         .attr("class", "graticule")
-        .attr("d", path)
+        .attr("d", path);
 
     svg.on("click", function(d){selected = []; updatedSelected(); });
 
@@ -71,7 +95,7 @@
     d3.queue()
         .defer(d3.json, "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
         .defer(d3.csv, "ICO_CROP_DATA.csv", function(d){
-            let month_abv = {"April":'apr', "July":'jul', "October":'oct'};
+            let month_abv = {"April":'apr', "July":'jul', "October":'oct'}
             let data = {};
             data.country = d.COUNTRY;
             data.prod = +d.TOTAL_PRODUCTION;
@@ -102,12 +126,10 @@
             .enter().insert("path", ".graticule")
                 .attr("class", "country")
                 .attr("d", path)
-                .style("fill", "lightgrey")
-                .classed("clickable", function(d) { return dataByCountry[d.properties.name]; })
+                .classed("clickable coffee", function(d) { return dataByCountry[d.properties.name]; })
 
         svg.selectAll(".clickable")
                 .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
-                .style("fill", "grey")
                 //.on("click", clickCountrySelect)
                 .call(d3.drag()
                     .on("start", startCountrySelect)
@@ -123,6 +145,7 @@
  *****************************************************************************/
     let selected = []
     function updatedSelected() {
+        console.log(selected)
      //Update Map
         d3.selectAll('.clickable')
             .classed('selected', function(d) {
@@ -143,23 +166,21 @@
     }
 
     function startCountrySelect(d){
-        console.log("start");
+        //console.log("start");
         d3.select("#main")
             .append("rect");
     }
 
     function dragCountrySelect(d){
-        console.log("dragging");
+        //console.log("dragging");
     }
 
     function endCountrySelect(d){
-        console.log(d3.event)
         console.log("end");
         select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
     function clickCountrySelect(d) {
-        console.log(d3.event)
         select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
@@ -182,6 +203,23 @@
         }
         updatedSelected()
     }
+
+/*****************************  Month Filters ********************************/
+
+    function filterByMonth(month){
+        console.log('filtering')
+        svg.selectAll('.coffee')
+            .classed('clickable', function(d){
+                let matchesMonth = d.data[1990][0].month == month;
+                if (!matchesMonth) {
+                    return d3.select(this).classed('clickable')
+                } else {
+                    console.log(!d3.select(this).classed('clickable'))
+                    return !d3.select(this).classed('clickable')
+                }
+            })
+    }
+
 /*****************************************************************************
                 Chart Makers
  *****************************************************************************/
