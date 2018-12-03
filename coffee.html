@@ -45,19 +45,21 @@
     }
 
     .line {
-    	fill: none;
-    	stroke: blue;
-    	stroke-width: 2px;
+        fill: none;
+        stroke: blue;
+        stroke-width: 2px;
     }
 </style>
 </head>
 
 <body>
-<svg width="980" height="270" id="main"></svg>
 <div class ="monthFilterButton down" id="apr"> April </div>
 <div class ="monthFilterButton down" id="jul"> July </div>
 <div class ="monthFilterButton down" id="oct"> October </div>
 <div id="selected"></div>
+<svg width="980" height="270" id="main"></svg>
+<svg id="lower"></svg>
+
 
 <script src="js/d3.v4.min.js"></script>
 <script src="js/topojson.v1.min.js"></script>
@@ -216,14 +218,12 @@
 /*****************************  Month Filters ********************************/
 
     function filterByMonth(month){
-        console.log('filtering')
         svg.selectAll('.coffee')
             .classed('clickable', function(d){
-                let matchesMonth = d.data[1990][0].month == month;
+                let matchesMonth = d.data[0].month == month;
                 if (!matchesMonth) {
                     return d3.select(this).classed('clickable')
                 } else {
-                    console.log(!d3.select(this).classed('clickable'))
                     return !d3.select(this).classed('clickable')
                 }
             })
@@ -235,14 +235,14 @@
 
     // Note example drawLineChart above - it needs to be run in the function ready()
     function drawLineChart(countryName) {
-    	// Ref: https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
+        // Ref: https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
         let data = dataByCountry[countryName];
         console.log(data);
 
         // dimensions of graph
         let margin = {top: 20, right: 20, bottom: 30, left: 50},
-        	width = 960 - margin.left - margin.right,
-        	height = 500 - margin.top - margin.bottom;
+                      width = 960 - margin.left - margin.right,
+                      height = 500 - margin.top - margin.bottom;
         // axis ranges
         let x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
         let y = d3.scaleLinear().domain([0, 2000]).range([height, 0]); //TODO: replace 200 with max consum value
@@ -253,25 +253,28 @@
             .y(function(d) { return y(d.consum); });
 
         //append svg
-        let svg2 = d3.select("body").append("svg")
-        	.attr("width", width + margin.left + margin.right)
-        	.attr("height", 1000) //height + margin.top + margin.bottom)
+        let svg2 = d3.select("#lower")
+        svg2.selectAll("*").remove()
+
+        let graph = svg2.attr("width", width + margin.left + margin.right)
+            .attr("height", 1000) //height + margin.top + margin.bottom)
             .append("g")
-        	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         // Add the consumptionLine path.
-        svg2.append("path")
+        graph.append("path")
             .data([data])
             .attr("class", "line")
             .attr("d", consumptionLine);
 
         // add the X Axis
-		  svg2.append("g")
-		      .attr("transform", "translate(0," + height + ")")
-		      .call(d3.axisBottom(x));
-		// add the Y Axis
-		  svg2.append("g")
-		      .call(d3.axisLeft(y));
+        graph.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+        // add the Y Axis
+        graph.append("g")
+            .call(d3.axisLeft(y));
+        return
     }
 
 </script>
