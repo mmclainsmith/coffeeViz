@@ -14,9 +14,7 @@
         stroke-opacity: .5;
         shape-rendering: crispEdges;
     }
-    .selected {
-        stroke: black;
-    }
+
 
     .down {
         background-color: grey;
@@ -28,6 +26,12 @@
     }
     .unclickable {
         fill: Gainsboro !important;
+    }
+
+    .selected {
+        stroke: black;
+        stroke-width: 1px;
+        stroke-opacity: 1;
     }
 
     .line {
@@ -100,7 +104,7 @@
         .attr("class", "graticule")
         .attr("d", path);
 
-    //svg.on("click", function(d){selected = []; updatedSelected(); });
+    svg.on("click", function(d){selected = []; updatedSelected(); });
 
 
 /******************************************************************************
@@ -188,6 +192,15 @@
  *****************************************************************************/
     let selected = []
     function updatedSelected() {
+        // Remove unclickable things from selected
+        svg.selectAll('.coffee.unclickable')
+            .each(function(d) {
+                if (selected.includes(d.name)) {
+                    selected.splice( selected.indexOf(d.name) );
+                }
+            })
+            .classed('selected', false)
+
         if (selected.length == 1) {
             drawLineChart(selected[0])
         }
@@ -220,11 +233,13 @@
     }
 
     function endCountrySelect(d){
+
         console.log("end");
         select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
     function clickCountrySelect(d) {
+        d3.event.stopPropagation(); // Allows background clicking to deselect
         select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
@@ -261,6 +276,7 @@
                     return !d3.select(this).classed('unclickable')
                 }
             });
+        updatedSelected()
     }
 
 /*******************************  Color Map **********************************/
