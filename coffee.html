@@ -3,8 +3,26 @@
 <head>
 <meta charset="utf-8">
 <style>
+    :root {
+      --dark-brown: #7E685A;
+      --light-brown: #C2B9B0;
+      --green: #839153;
+      --b-grey: #C2CAD0;
+      --grey: gainsboro;
+      --time: .5s;
+    }
+
     body {
         background: #fcfcfa;
+    }
+
+    svg {
+        margin: none;
+        display: block;
+    }
+
+    div {
+        transition: var(--time);
     }
 
     .graticule {
@@ -12,24 +30,24 @@
         stroke: #777;
         stroke-width: .5px;
         stroke-opacity: .5;
-        shape-rendering: crispEdges;
+        stroke-dasharray: 1,1;
     }
 
-
-    .down {
-        background-color: grey;
+    .graticule, .domain, .tick {
+        shape-rendering: crispEdges;
     }
     .country {
         stroke: #777;
         stroke-width: .5px;
         stroke-opacity: .5;
+        transition: var(--time) fill;
     }
     .unclickable {
-        fill: Gainsboro !important;
+        fill: var(--grey) !important;
     }
 
     .selected {
-        stroke: black;
+        stroke: var(--dark-brown);
         stroke-width: 1px;
         stroke-opacity: 1;
     }
@@ -41,21 +59,44 @@
     }
 
     #main {
-        background-color: silver;
-    }
-
-    #slider .domain {
-        stroke-width: 1px;
-        stroke: green;
+        background: var(--b-grey);
     }
 
     #slider {
-        background-color: lightgrey;
+        background-color: ;
     }
 
     .slideBar {
-        fill: grey;
+        fill: var(--grey);
     }
+
+    .monthFilterButton{
+        display: inline-block;
+        padding: 5px;
+        background-color: var(--light-brown);
+        text-align: center;
+        width: 5em;
+        color: var(--dark-brown);
+    }
+
+    .down {
+        background-color: var(--dark-brown);
+        color: black;
+    }
+
+    #selectionBox {
+        fill: var(--green);
+    }
+
+    #sliderLines .tick line {
+        stroke: var(--light-brown) !important;
+        stroke-dasharray: 1,1;
+    }
+
+    #sliderLines .domain, #sliderAxis .domain, #sliderAxis .tick line{
+        stroke: none !important;
+    }
+
 </style>
 </head>
 
@@ -63,9 +104,9 @@
 <div class ="monthFilterButton down" id="apr"> April </div>
 <div class ="monthFilterButton down" id="jul"> July </div>
 <div class ="monthFilterButton down" id="oct"> October </div>
-<div id="selected"></div>
 <svg width="980" height="270" id="main"></svg>
-<svg width="980" height="30" id="slider"></svg>
+<div id="selected"></div>
+<svg id="slider"></svg>
 <svg id="lower"></svg>
 
 
@@ -88,7 +129,7 @@
 
     let path = d3.geoPath().projection(projection);
 
-    let graticule = d3.geoGraticule();
+    let graticule = d3.geoGraticule().step([5, 5]);
 
     d3.selectAll(".monthFilterButton")
         .on("click", function(d) {
@@ -136,7 +177,7 @@
         globalData = data;
 
         let slider = {  svg: d3.select('#slider'),
-                        width: 900,
+                        width: 980,
                         height: 70,
                         mTop: 20,
                         mLeft: 20 }
@@ -145,7 +186,7 @@
                             .domain([1990, 2018])
                             .range([0, slider.width - 2 * slider.mLeft - 1]);
 
-
+        // Allowed sliding area
         slider.svg.attr('width', slider.width)
             .attr('height', slider.height)
             .append('rect')
@@ -154,10 +195,31 @@
                 .attr('height', slider.height - slider.mTop * 2)
                 .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`);
 
+        // Movable section
+        let selectionBox = slider.svg
+            .append('rect')
+            .attr('id', 'selectionBox')
+            .attr('width', d => yearScale(1991) - yearScale(1990))
+            .attr('height', slider.height - slider.mTop * 2)
+            .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`);
+
+
+        //Numbered tick marks
         slider.svg.append('g')
+            .attr("id", "sliderAxis")
             .attr("transform", `translate(${slider.mLeft}, ${slider.height - slider.mTop})`)
             .call(d3.axisBottom(yearScale)
                     .tickFormat(d3.format("d")));
+
+        // Unlabelled ticks
+        slider.svg.append('g')
+            .attr("id", 'sliderLines')
+            .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`)
+            .call(d3.axisBottom(yearScale)
+                    .tickSize(slider.height - slider.mTop * 2)
+                    .ticks(20) );
+
+        d3.select("#sliderLines").selectAll("text").remove(); //Removes extra text
 
         dataByCountry = dataByCountry
             .key(function(d) { return d.country; })
@@ -172,7 +234,8 @@
                 .attr("class", "country")
                 .attr("d", path)
                 .classed("coffee", function(d) { return dataByCountry[d.properties.name]; })
-                .classed("unclickable", function(d) { return !dataByCountry[d.properties.name]; });
+                .classed("unclickable", function(d) { return !dataByCountry[d.properties.name]; })
+                .transition().duration(6000);
 
         svg.selectAll(".coffee")
                 .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
@@ -183,7 +246,6 @@
                     .on("end", endCountrySelect));
 
 
-        drawLineChart("Ethiopia");
         colorMap(1990, 1991, 'prod');
     };
 
@@ -280,7 +342,7 @@
     }
 
 /*******************************  Color Map **********************************/
-    let mapColors = d3.scaleLinear().range(['white', 'SaddleBrown']);
+    let mapColors = d3.scaleLinear().range(['#C2B9B0', '#4F2D0D']);
 
 
     function colorMap(startYear, endYear, stat){
