@@ -6,27 +6,13 @@
     body {
         background: #fcfcfa;
     }
-    .stroke {
-        fill: none;
-        stroke: #000;
-        stroke-width: 3px;
-    }
-    .fill {
-        fill: #fff;
-    }
+
     .graticule {
         fill: none;
         stroke: #777;
         stroke-width: .5px;
         stroke-opacity: .5;
-    }
-    .land {
-        fill: #222;
-    }
-    .boundary {
-        fill: none;
-        stroke: #fff;
-        stroke-width: .5px;
+        shape-rendering: crispEdges;
     }
     .selected {
         stroke: black;
@@ -35,19 +21,36 @@
     .down {
         background-color: grey;
     }
-
     .country {
-        fill: lightgrey;
+        stroke: #777;
+        stroke-width: .5px;
+        stroke-opacity: .5;
     }
-
-    .clickable {
-        fill: grey;
+    .unclickable {
+        fill: Gainsboro !important;
     }
 
     .line {
         fill: none;
         stroke: blue;
         stroke-width: 2px;
+    }
+
+    #main {
+        background-color: silver;
+    }
+
+    #slider .domain {
+        stroke-width: 1px;
+        stroke: green;
+    }
+
+    #slider {
+        background-color: lightgrey;
+    }
+
+    .slideBar {
+        fill: grey;
     }
 </style>
 </head>
@@ -58,6 +61,7 @@
 <div class ="monthFilterButton down" id="oct"> October </div>
 <div id="selected"></div>
 <svg width="980" height="270" id="main"></svg>
+<svg width="980" height="30" id="slider"></svg>
 <svg id="lower"></svg>
 
 
@@ -68,6 +72,8 @@
     let svg = d3.select("#main"),
         width = +svg.attr("width"),
         height = +svg.attr("height");
+
+    let globalData; // This is horrifying, forgive me Mark.
 
     let dataByCountry = d3.nest();
 
@@ -94,7 +100,7 @@
         .attr("class", "graticule")
         .attr("d", path);
 
-    svg.on("click", function(d){selected = []; updatedSelected(); });
+    //svg.on("click", function(d){selected = []; updatedSelected(); });
 
 
 /******************************************************************************
@@ -123,20 +129,48 @@
     function ready(error, world, data) {
         if (error) throw error;
 
+        globalData = data;
+
+        let slider = {  svg: d3.select('#slider'),
+                        width: 900,
+                        height: 70,
+                        mTop: 20,
+                        mLeft: 20 }
+
+        let yearScale = d3.scaleLinear()
+                            .domain([1990, 2018])
+                            .range([0, slider.width - 2 * slider.mLeft - 1]);
+
+
+        slider.svg.attr('width', slider.width)
+            .attr('height', slider.height)
+            .append('rect')
+                .attr('class', 'slideBar')
+                .attr('width', slider.width - slider.mLeft * 2)
+                .attr('height', slider.height - slider.mTop * 2)
+                .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`);
+
+        slider.svg.append('g')
+            .attr("transform", `translate(${slider.mLeft}, ${slider.height - slider.mTop})`)
+            .call(d3.axisBottom(yearScale)
+                    .tickFormat(d3.format("d")));
+
         dataByCountry = dataByCountry
             .key(function(d) { return d.country; })
             //.key(function(d) { return d.year; })
             .object(data);
 
         // Draw countries
-        svg.selectAll(".country")
+        svg.append('g')
+            .selectAll(".country")
             .data(world.features)
             .enter().insert("path", ".graticule")
                 .attr("class", "country")
                 .attr("d", path)
-                .classed("clickable coffee", function(d) { return dataByCountry[d.properties.name]; })
+                .classed("coffee", function(d) { return dataByCountry[d.properties.name]; })
+                .classed("unclickable", function(d) { return !dataByCountry[d.properties.name]; });
 
-        svg.selectAll(".clickable")
+        svg.selectAll(".coffee")
                 .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
                 //.on("click", clickCountrySelect)
                 .call(d3.drag()
@@ -146,6 +180,7 @@
 
 
         drawLineChart("Ethiopia");
+        colorMap(1990, 1991, 'prod');
     };
 
 /*****************************************************************************
@@ -153,12 +188,11 @@
  *****************************************************************************/
     let selected = []
     function updatedSelected() {
-        console.log(selected)
-        if (selected.length = 1) {
+        if (selected.length == 1) {
             drawLineChart(selected[0])
         }
      //Update Map
-        d3.selectAll('.clickable')
+        d3.selectAll('.coffee:not(.unclickable)')
             .classed('selected', function(d) {
                 return selected.includes(d.name);
             })
@@ -171,7 +205,6 @@
             .enter().append("a")
                 //.on("click", function)
                 .html(function(d){
-                     console.log(d);
                      return d;
                 })
     }
@@ -201,7 +234,6 @@
                 console.log('shirt')
                 console.log(nameList[i])
                 console.log(nameList[i])
-                console.log(selected)
                 index = selected.indexOf(nameList[i]);
                 if (index == -1) { //Id not in list
                     selected.push(nameList[i]);
@@ -212,6 +244,7 @@
                 selected = nameList
             }
         }
+        console.log(selected)
         updatedSelected()
     }
 
@@ -219,14 +252,44 @@
 
     function filterByMonth(month){
         svg.selectAll('.coffee')
-            .classed('clickable', function(d){
+            .classed('unclickable', function(d){
+                console.log(d)
                 let matchesMonth = d.data[0].month == month;
-                if (!matchesMonth) {
-                    return d3.select(this).classed('clickable')
-                } else {
-                    return !d3.select(this).classed('clickable')
+                if (!matchesMonth) { //Other month, stay the same
+                    return d3.select(this).classed('unclickable')
+                } else { // specified month, toggle
+                    return !d3.select(this).classed('unclickable')
                 }
-            })
+            });
+    }
+
+/*******************************  Color Map **********************************/
+    let mapColors = d3.scaleLinear().range(['white', 'SaddleBrown']);
+
+
+    function colorMap(startYear, endYear, stat){
+        let range = d3.nest()
+                        .rollup(function(d) {
+                            return [d3.min(d, function(d2){ return d2[stat]}),
+                                    d3.max(d, function(d2){ return d2[stat]})];
+                        }).object( globalData.filter(function(d){
+                            return (startYear <= d.year && d.year < endYear)
+                        }));
+
+        let colors = mapColors.domain(range)
+
+
+        svg.selectAll('.coffee')
+            .style('fill', function(d){
+                let production = d3.nest()
+                                    .rollup(function(d) {
+                                        return d3.sum(d, function(d){ return d[stat] });
+                                    })
+                                    .object(d.data.filter(function(d){
+                                        return (startYear <= d.year && d.year < endYear)
+                                }));
+                return colors(production)
+            });
     }
 
 /*****************************************************************************
@@ -237,7 +300,7 @@
     function drawLineChart(countryName) {
         // Ref: https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
         let data = dataByCountry[countryName];
-        console.log(data);
+        //console.log(data);
 
         // dimensions of graph
         let margin = {top: 20, right: 20, bottom: 30, left: 50},
