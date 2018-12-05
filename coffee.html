@@ -83,11 +83,20 @@
         stroke-opacity: 1;
     }
 
-    .line {
+    .Cline { /* consumption */
+        fill: none;
+        stroke: brown;
+        stroke-width: 2px;
+    }
+    .Pline { /* production */
+        fill: none;
+        stroke: green;
+        stroke-width: 2px;
+    }
+    .Eline { /* export */
         fill: none;
         stroke: blue;
         stroke-width: 2px;
-    }
 
     #main {
         background: var(--b-grey);
@@ -371,11 +380,9 @@
                 Chart Makers
  *****************************************************************************/
 
-    // Note example drawLineChart above - it needs to be run in the function ready()
     function drawLineChart(countryName) {
         // Ref: https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
         let data = dataByCountry[countryName];
-        //console.log(data);
 
         // dimensions of graph
         let margin = {top: 20, right: 20, bottom: 30, left: 50},
@@ -383,14 +390,22 @@
                       height = 500 - margin.top - margin.bottom;
         // axis ranges
         let x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
-        let y = d3.scaleLinear().domain([0, 2000]).range([height, 0]); //TODO: replace 200 with max consum value
+        let y = d3.scaleLinear().domain([0, 8000]).range([height, 0]); //TODO: replace 8000 with max  value
 
         // consumption line
         let consumptionLine = d3.line()
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.consum); });
 
-        //append svg
+        let productionLine = d3.line()
+        	.x(function(d) {return x(d.year); })
+        	.y(function(d) {return y(d.prod); });
+
+        let exportLine = d3.line()
+        	.x(function(d) {return x(d.year); })
+        	.y(function(d) {return y(d.export); });
+
+        // append svg
         let svg2 = d3.select("#lower")
         svg2.selectAll("*").remove()
 
@@ -399,20 +414,33 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        // Add the consumptionLine path.
+        // add the lines!
         graph.append("path")
             .data([data])
-            .attr("class", "line")
+            .attr("class", "Cline") /* brown */
             .attr("d", consumptionLine);
 
-        // add the X Axis
+        graph.append("path")
+            .data([data])
+            .attr("class", "Pline") /* green */
+            .attr("d", productionLine);
+
+       	graph.append("path")
+            .data([data])
+            .attr("class", "Eline") /* blue */
+            .attr("d", exportLine);
+
+        // add the X axis
         graph.append("g")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
-        // add the Y Axis
+
+        // add the Y axis
         graph.append("g")
             .call(d3.axisLeft(y));
         return
+
+        // TODO: Label the axes, get rid of commas in the year, add a key for colors
     }
 
 
