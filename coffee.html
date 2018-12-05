@@ -103,6 +103,11 @@
         fill: none;
         stroke: blue;
         stroke-width: 2px;
+    }
+
+    .bar {
+    	fill: var(--dark-brown);
+    }
 
     #main {
         background: var(--b-grey);
@@ -284,7 +289,12 @@
             .classed('selected', false)
 
         if (selected.length == 1) {
-            drawLineChart(selected[0])
+            drawLineChart(selected[0]);
+            // drawBarChart(selected[0]);
+        }
+
+        if (selected.length > 1) { // TODO: add multiple selections
+        	drawBarChart(selected[0])
         }
      //Update Map
         d3.selectAll('.coffee:not(.unclickable)')
@@ -452,7 +462,7 @@
         	.attr("x", 0 - (height / 2))
         	.attr("dy", "1em")
         	.style("text-anchor", "middle")
-        	.text("Value"); // TODO: add units
+        	.text("Thousand 60kg bags of green coffee");
 
         // add legend
         for (let i = 0; i < 3; i++) {
@@ -473,6 +483,62 @@
 
         // TODO: get rid of commas in the year
     }
+
+    function drawBarChart(countryName) {
+        let data = dataByCountry[countryName];
+
+        // dimensions of graph
+        let margin = {top: 20, right: 20, bottom: 30, left: 60},
+                      width = 960 - margin.left - margin.right,
+                      height = 500 - margin.top - margin.bottom;
+        // axis ranges
+        let x = d3.scaleBand().domain([0, 10]).range([0, width]); //TODO: change domain to number of countries
+        let y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.prod; })]).range([height, 0]);
+
+        let svg2 = d3.select("#lower")
+        svg2.selectAll("*").remove()
+
+        svg2.append("text")
+        	.attr("transform", "translate(" + (width/2) + "," + (margin.top) + ")")
+        	.style("text-anchor", "middle")
+        	.text("Production in 2017");
+
+        svg2.selectAll(".bar").data([data])
+        	.enter().append("rect")
+        		.attr("class", "bar")
+        		.attr("x", function(d) { return x(0); })
+        		.attr("width", 50)
+        		.attr("y", function(d) { return y(d[27].prod); })
+        		.attr("height", function(d) { return height - y(d[27].prod); });
+
+        let graph = svg2.attr("width", width + margin.left + margin.right)
+            .attr("height", 1000)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // add X axis
+        graph.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        graph.append("text")
+        	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
+        	.style("text-anchor", "middle")
+        	.text("Country");
+
+        // add Y axis
+        graph.append("g")
+            .call(d3.axisLeft(y));
+
+        graph.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 0 - margin.left)
+        	.attr("x", 0 - (height / 2))
+        	.attr("dy", "1em")
+        	.style("text-anchor", "middle")
+        	.text("Production per thousand 60kg bags of green coffee");
+    }
+
 
 
 /*****************************************************************************
