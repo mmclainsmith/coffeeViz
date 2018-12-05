@@ -403,7 +403,7 @@
         // dimensions of graph
         let margin = {top: 20, right: 20, bottom: 30, left: 70},
                       width = 960 - margin.left - margin.right,
-                      height = 500 - margin.top - margin.bottom;
+                      height = 300 - margin.top - margin.bottom;
 
         // axis ranges
         let max = d3.nest()
@@ -416,7 +416,7 @@
 
 
         let x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
-        let y = d3.scaleLinear().domain([0, d3.max(max)]).range([height, 0]); //TODO: scale domain height to max value
+        let y = d3.scaleLinear().domain([0, d3.max(max)]).range([height, 0]);
 
         // lines
         let consumptionLine = d3.line()
@@ -490,8 +490,6 @@
         }
 
         return
-
-        // TODO: get rid of commas in the year
     }
 
     function drawBarChart(countryName) {
@@ -500,7 +498,7 @@
         // dimensions of graph
         let margin = {top: 20, right: 20, bottom: 30, left: 70},
                       width = 960 - margin.left - margin.right,
-                      height = 500 - margin.top - margin.bottom;
+                      height = 300 - margin.top - margin.bottom;
         // axis ranges
         let x = d3.scaleBand().domain([0, 10]).range([0, width]); //TODO: change domain to number of countries
         let y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.prod; })]).range([height, 0]);
