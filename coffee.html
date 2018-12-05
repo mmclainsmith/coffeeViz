@@ -83,6 +83,12 @@
         stroke-opacity: 1;
     }
 
+    .line {
+    	fill: none;
+    	stroke: black;
+    	stroke-width: 2px;
+    }
+
     .Cline { /* consumption */
         fill: none;
         stroke: brown;
@@ -385,62 +391,87 @@
         let data = dataByCountry[countryName];
 
         // dimensions of graph
-        let margin = {top: 20, right: 20, bottom: 30, left: 50},
+        let margin = {top: 20, right: 20, bottom: 30, left: 60},
                       width = 960 - margin.left - margin.right,
                       height = 500 - margin.top - margin.bottom;
         // axis ranges
         let x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
-        let y = d3.scaleLinear().domain([0, 8000]).range([height, 0]); //TODO: replace 8000 with max  value
+        let y = d3.scaleLinear().domain([0, 8000]).range([height, 0]); //TODO: scale domain height to max value
 
-        // consumption line
+        // lines
         let consumptionLine = d3.line()
             .x(function(d) { return x(d.year); })
             .y(function(d) { return y(d.consum); });
 
         let productionLine = d3.line()
-        	.x(function(d) {return x(d.year); })
-        	.y(function(d) {return y(d.prod); });
+        	.x(function(d) { return x(d.year); })
+        	.y(function(d) { return y(d.prod); });
 
         let exportLine = d3.line()
-        	.x(function(d) {return x(d.year); })
-        	.y(function(d) {return y(d.export); });
+        	.x(function(d) { return x(d.year); })
+        	.y(function(d) { return y(d.export); });
 
         // append svg
         let svg2 = d3.select("#lower")
         svg2.selectAll("*").remove()
 
         let graph = svg2.attr("width", width + margin.left + margin.right)
-            .attr("height", 1000) //height + margin.top + margin.bottom)
+            .attr("height", 1000)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         // add the lines!
-        graph.append("path")
-            .data([data])
-            .attr("class", "Cline") /* brown */
-            .attr("d", consumptionLine);
+        for (let i = 0; i < 3; i++) {
+        	var linetype = ["Cline", "Pline", "Eline"];
+        	var line = [consumptionLine, productionLine, exportLine];
+        	graph.append("path")
+	            .data([data])
+	            .attr("class", linetype[i])
+	            .attr("d", line[i]);
+        }
 
-        graph.append("path")
-            .data([data])
-            .attr("class", "Pline") /* green */
-            .attr("d", productionLine);
-
-       	graph.append("path")
-            .data([data])
-            .attr("class", "Eline") /* blue */
-            .attr("d", exportLine);
-
-        // add the X axis
+        // add X axis
         graph.append("g")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
 
-        // add the Y axis
+        // label X axis
+        graph.append("text")
+        	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
+        	.style("text-anchor", "middle")
+        	.text("Year");
+
+        // add Y axis
         graph.append("g")
             .call(d3.axisLeft(y));
+
+        // label Y axis
+        graph.append("text")
+        	.attr("transform", "rotate(-90)")
+        	.attr("y", 0 - margin.left)
+        	.attr("x", 0 - (height / 2))
+        	.attr("dy", "1em")
+        	.style("text-anchor", "middle")
+        	.text("Value"); // TODO: add units
+
+        // add legend
+        for (let i = 0; i < 3; i++) {
+        	var linetypes = ["Consumption", "Export", "Production"];
+        	var colors = ["brown", "blue", "green"];
+        	graph.append('rect')
+				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
+				.attr('width', 20)
+				.attr('height', 20)
+				.attr('fill', colors[i]);
+			graph.append("text")
+	        	.attr("transform", "translate(" + (width/2 - (100*(i-1)) + 10) + "," + (height + margin.top + 85) + ")")
+	        	.style("text-anchor", "middle")
+	        	.text(linetypes[i]);
+        }
+
         return
 
-        // TODO: Label the axes, get rid of commas in the year, add a key for colors
+        // TODO: get rid of commas in the year
     }
 
 
