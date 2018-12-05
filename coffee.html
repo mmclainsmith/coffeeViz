@@ -404,9 +404,19 @@
         let margin = {top: 20, right: 20, bottom: 30, left: 60},
                       width = 960 - margin.left - margin.right,
                       height = 500 - margin.top - margin.bottom;
+
         // axis ranges
+        let max = d3.nest()
+                    .rollup(d => {return [
+                        d3.max(d, d2 => d2["prod"]),
+                        d3.max(d, d2 => d2["consum"]),
+                        d3.max(d, d2 => d2["export"]),
+                    ]})
+                    .object(data)
+
+
         let x = d3.scaleLinear().domain([1990, 2017]).range([0, width]);
-        let y = d3.scaleLinear().domain([0, 8000]).range([height, 0]); //TODO: scale domain height to max value
+        let y = d3.scaleLinear().domain([0, d3.max(max)]).range([height, 0]); //TODO: scale domain height to max value
 
         // lines
         let consumptionLine = d3.line()
@@ -443,7 +453,7 @@
         // add X axis
         graph.append("g")
             .attr("transform", "translate(0," + height + ")")
-            .call(d3.axisBottom(x));
+            .call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
         // label X axis
         graph.append("text")
