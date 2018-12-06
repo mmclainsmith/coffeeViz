@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<title>Coffee</title>
 <style>
     @import url("https://fonts.googleapis.com/css?family=Caveat");
     @import url("https://fonts.googleapis.com/css?family=Mali");
@@ -204,6 +205,12 @@
         fill: var(--dark-brown);
     }
 
+    #selected a {
+        font-family: "Mali";
+        display: inline-block;
+        margin: 10px;
+    }
+
 </style>
 </head>
 
@@ -315,6 +322,15 @@
                     .on("drag", dragCountrySelect)
                     .on("end", endCountrySelect));
 
+        d3.selectAll(".catFilterButton")
+            .on("click", function(d) {
+                console.log(d3.select(this))
+                cStat = d3.select(this).attr("id");
+                d3.selectAll(".catFilterButton").classed("down", false);
+                d3.select(this).classed("down", true);
+                colorMap();
+            });
+
         makeMonthSelectors()
         colorMap();
     };
@@ -325,8 +341,6 @@
     let selected = []
     function updatedSelected() {
         // Remove unclickable things from selected
-        console.log(selected)
-        console.trace()
         svg.selectAll(".coffee.unclickable")
             .each(function(d) {
                 if (selected.includes(d.name)) {
@@ -337,10 +351,10 @@
         if (selected.length == 1) {
             drawLineChart(selected[0]);
             // drawBarChart(selected[0]);
-        }
-
-        if (selected.length > 1) { // TODO: add multiple selections
+        } else if (selected.length > 1) { // TODO: add multiple selections
         	drawBarChart(selected[0])
+        } else {
+            d3.select("#lower *").remove();
         }
 
      //Update Map
@@ -348,7 +362,7 @@
             .classed("selected", function(d) {
                 return selected.includes(d.name);
             })
-        //d3.selectAll(".selected").raise();
+        d3.selectAll(".selected").raise();
 
      //Update bar
         d3.selectAll("#selected a").remove();
@@ -384,25 +398,21 @@
 
     function select(nameList, shift) {
         for (let i = 0; i < nameList.length; i++) {
+            index = selected.indexOf(nameList[i]);
             if (shift) {
-                console.log("shirt")
-                console.log(nameList[i])
-                console.log(nameList[i])
-                index = selected.indexOf(nameList[i]);
                 if (index == -1) { //Id not in list
                     selected.push(nameList[i]);
                 } else {
                     selected.splice(index);
                 }
             } else { //Shift not selected
-                if (selected.includes(nameList[i]) ){
-                    selected.splice( selected.indexOf(nameList[i]) );
+                if (index == -1) {
+                    selected = nameList;
                 } else {
-                    selected.push(nameList[i]);
+                    selected = [];
                 }
             }
         }
-        console.log(selected)
         updatedSelected()
     }
 
