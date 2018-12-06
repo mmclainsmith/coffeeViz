@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <style>
-    @import url('https://fonts.googleapis.com/css?family=Caveat');
-    @import url('https://fonts.googleapis.com/css?family=Mali');
+    @import url("https://fonts.googleapis.com/css?family=Caveat");
+    @import url("https://fonts.googleapis.com/css?family=Mali");
 
     :root {
       --darkest-brown: #4F2D0D;
@@ -24,10 +24,11 @@
     }
 
     h1 {
-        font-family: 'Mali';
+        font-family: "Mali";
         font-size: 64pt;
         color: var(--darkest-brown);
         margin: 0;
+        text-shadow: var(--light-brown) 2px 2px;
     }
 
     h2, h3 {
@@ -59,7 +60,7 @@
         stroke-dasharray: 1,1;
     }
 
-    .graticule, .domain, .tick {
+    .graticule, .domain, .tick, .monthFilterButton rect {
         shape-rendering: crispEdges;
     }
     .country {
@@ -107,6 +108,7 @@
 
     #main {
         background: var(--b-grey);
+        border-top: 1px solid var(--dark-brown);
     }
 
     .slideBar {
@@ -126,6 +128,29 @@
     .down {
         background-color: var(--dark-brown);
         color: black;
+    }
+
+    #catBtns {
+        display: flex;
+        width: 980px;
+        margin: 0 auto;
+    }
+
+    .catFilterButton {
+        flex-grow: 1;
+        margin: 0;
+        padding: 5px 0;
+        background-color: var(--light-brown);
+        box-sizing: border-box;
+        color: var(--dark-brown);
+    }
+    .catFilterButton.down{
+        background-color: var(--green);
+        color: black;
+    }
+
+    .catFilterButton:hover{
+        filter: brightness(90%);
     }
 
     .sliderBrush .selection {
@@ -156,6 +181,25 @@
         stroke: none !important;
     }
 
+    .monthFilterButton rect{
+        fill: var(--grey);
+        stroke: var(--dark-brown);
+        stroke-width: .5px;
+        stroke-opacity:
+    }
+
+    .monthFilterButton text{
+        fill: var(--light-brown);
+    }
+
+    .monthFilterButton.down rect{
+        fill: var(--light-brown);
+    }
+
+    .monthFilterButton.down text{
+        fill: var(--dark-brown);
+    }
+
 </style>
 </head>
 
@@ -163,9 +207,13 @@
 <h1> Coffee </h1>
 <h2> A look at coffee production around the world </h2>
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
-<div class ="monthFilterButton down" id="apr"> April </div>
-<div class ="monthFilterButton down" id="jul"> July </div>
-<div class ="monthFilterButton down" id="oct"> October </div>
+
+<div id = "catBtns">
+    <div class ="catFilterButton down" id="prod"> Production </div>
+    <div class ="catFilterButton" id="consum"> Consumption </div>
+    <div class ="catFilterButton" id="export"> Export </div>
+    <div class ="catFilterButton" id="stock"> Opening Stock </div>
+</div>
 <svg width="980" height="270" id="main"></svg>
 
 <svg id="slider"></svg>
@@ -181,10 +229,13 @@
         width = +svg.attr("width"),
         height = +svg.attr("height");
 
+    let catAbvs = {"Production":"prod", "Export":"exp", "Consumption":"consum", "Stock":"stock"};
+    let month_abv = {"April":"apr", "July":"jul", "October":"oct"};
+
     // This is horrifying, forgive me Mark.
-    let startYear = 1990,
-        endYear = 2018,
-        cStat   = 'prod';
+    let startYear = 1998,
+        endYear = 2004,
+        cStat   = "prod";
 
     let dataByCountry = d3.nest();
 
@@ -197,21 +248,16 @@
 
     let graticule = d3.geoGraticule().step([5, 5]);
 
-    d3.selectAll(".monthFilterButton")
-        .on("click", function(d) {
-            btn = d3.select(this)
-            btn.classed('down', function(d){
-                return !d3.select(this).classed("down");
-            });
-            filterByMonth(btn.attr('id'))
-        });
 
     svg.append("path")
         .datum(graticule)
         .attr("class", "graticule")
         .attr("d", path);
 
-    svg.on("click", function(d){selected = []; updatedSelected(); });
+    svg.on("click", d => {
+        selected = [];
+        updatedSelected();
+    });
 
 
 /******************************************************************************
@@ -220,7 +266,6 @@
     d3.queue()
         .defer(d3.json, "https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json")
         .defer(d3.csv, "ICO_CROP_DATA.csv", function(d){
-            let month_abv = {"April":'apr', "July":'jul', "October":'oct'}
             let data = {};
             data.country = d.COUNTRY;
             data.prod = +d.TOTAL_PRODUCTION;
@@ -248,7 +293,7 @@
         makeSlider()
 
         // Draw countries
-        svg.append('g')
+        svg.append("g")
             .selectAll(".country")
             .data(world.features)
             .enter().insert("path", ".graticule")
@@ -259,14 +304,14 @@
                 .transition().duration(6000);
 
         svg.selectAll(".coffee")
-                .datum(function(d) { return {'name':d.properties.name, 'data':dataByCountry[d.properties.name] } })
-                //.on("click", clickCountrySelect)
+                .datum(function(d) { return {"name":d.properties.name, "data":dataByCountry[d.properties.name] } })
+                .on("click", d => d3.event.stopPropagation() )
                 .call(d3.drag()
                     .on("start", startCountrySelect)
                     .on("drag", dragCountrySelect)
                     .on("end", endCountrySelect));
 
-
+        makeMonthSelectors()
         colorMap();
     };
 
@@ -276,23 +321,25 @@
     let selected = []
     function updatedSelected() {
         // Remove unclickable things from selected
-        svg.selectAll('.coffee.unclickable')
+        console.log(selected)
+        console.trace()
+        svg.selectAll(".coffee.unclickable")
             .each(function(d) {
                 if (selected.includes(d.name)) {
                     selected.splice( selected.indexOf(d.name) );
                 }
-            })
-            .classed('selected', false)
+            }).classed("selected", false)
 
         if (selected.length == 1) {
             drawLineChart(selected[0])
         }
+
      //Update Map
-        d3.selectAll('.coffee:not(.unclickable)')
-            .classed('selected', function(d) {
+        d3.selectAll(".coffee:not(.unclickable)")
+            .classed("selected", function(d) {
                 return selected.includes(d.name);
             })
-         d3.selectAll('.selected').raise();
+        //d3.selectAll(".selected").raise();
 
      //Update bar
         d3.selectAll("#selected a").remove();
@@ -329,7 +376,7 @@
     function select(nameList, shift) {
         for (let i = 0; i < nameList.length; i++) {
             if (shift) {
-                console.log('shirt')
+                console.log("shirt")
                 console.log(nameList[i])
                 console.log(nameList[i])
                 index = selected.indexOf(nameList[i]);
@@ -338,8 +385,12 @@
                 } else {
                     selected.splice(index);
                 }
-            } else {
-                selected = nameList
+            } else { //Shift not selected
+                if (selected.includes(nameList[i]) ){
+                    selected.splice( selected.indexOf(nameList[i]) );
+                } else {
+                    selected.push(nameList[i]);
+                }
             }
         }
         console.log(selected)
@@ -348,15 +399,50 @@
 
 
 /*****************************  Month Filters ********************************/
+    function makeMonthSelectors(){
+        let margin = 20
+        let monthScale = d3.scaleBand()
+                            .domain(Object.keys(month_abv))
+                            .range([height - margin - 90, height - margin])
+                            .padding(.2);
+
+
+        let monthBoxes = svg.selectAll(".monthFilterButton")
+            .data(Object.entries(month_abv))
+            .enter()
+                .append("g")
+                .attr("transform", d => `translate(${margin}, ${monthScale(d[0])})`)
+                //.attr("height", monthScale.bandwidth())
+                .attr("class", "monthFilterButton down")
+                .on("click", function(d) {
+                    btn = d3.select(this)
+                    btn.classed("down", function(d){
+                        return !d3.select(this).classed("down");
+                    });
+                    filterByMonth(d[1]);
+                });
+
+        monthBoxes.append("rect")
+                .attr("height", monthScale.bandwidth())
+                .attr("width", 80)
+
+
+        monthBoxes.append("text")
+                .attr("dy", ".35em")
+                .attr("dx", 40)
+                .text(d => d[0])
+                .attr("alignment-baseline","hanging")
+                .attr("text-anchor", "middle");
+    }
 
     function filterByMonth(month){
-        svg.selectAll('.coffee')
-            .classed('unclickable', function(d){
+        svg.selectAll(".coffee")
+            .classed("unclickable", function(d){
                 let matchesMonth = d.data[0].month == month;
                 if (!matchesMonth) { //Other month, stay the same
-                    return d3.select(this).classed('unclickable')
+                    return d3.select(this).classed("unclickable")
                 } else { // specified month, toggle
-                    return !d3.select(this).classed('unclickable')
+                    return !d3.select(this).classed("unclickable")
                 }
             });
         updatedSelected();
@@ -364,12 +450,12 @@
     }
 
 /*******************************  Color Map **********************************/
-    let mapColors = d3.scaleLinear().range(['#C2B9B0', '#4F2D0D']);
+    let mapColors = d3.scaleLinear().range(["#C2B9B0", "#4F2D0D"]);
 
 
     function colorMap(){
         let sums = {};
-        svg.selectAll('.coffee:not(.unclickable)')
+        svg.selectAll(".coffee:not(.unclickable)")
             .each(d => {
                 sums[d.name] = d3.nest()
                     .rollup( d2 => d3.sum(d2, d3 => d3[cStat]))
@@ -379,8 +465,8 @@
         let sumsArr = Object.values(sums);
         let colors = mapColors.domain([d3.min(sumsArr), d3.max(sumsArr)])
 
-        svg.selectAll('.coffee')
-            .style('fill', d => colors(sums[d.name]) );
+        svg.selectAll(".coffee")
+            .style("fill", d => colors(sums[d.name]) );
     }
 
 /*****************************************************************************
@@ -469,11 +555,11 @@
         for (let i = 0; i < 3; i++) {
         	var linetypes = ["Consumption", "Export", "Production"];
         	var colors = ["brown", "blue", "green"];
-        	graph.append('rect')
+        	graph.append("rect")
 				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
-				.attr('width', 20)
-				.attr('height', 20)
-				.attr('fill', colors[i]);
+				.attr("width", 20)
+				.attr("height", 20)
+				.attr("fill", colors[i]);
 			graph.append("text")
 	        	.attr("transform", "translate(" + (width/2 - (100*(i-1)) + 10) + "," + (height + margin.top + 85) + ")")
 	        	.style("text-anchor", "middle")
@@ -490,7 +576,7 @@
                 Time Slider
  *****************************************************************************/
     function makeSlider() {
-        let slider = {  svg: d3.select('#slider'),
+        let slider = {  svg: d3.select("#slider"),
                         height: 70,
                         mTop: 20,
                         mLeft: 20 }
@@ -500,16 +586,16 @@
                             .range([0, width - 1]);
 
         // Allowed sliding area
-        slider.svg.attr('width', width + 2 * slider.mLeft)
-            .attr('height', slider.height)
-            .append('rect')
-                .attr('class', 'slideBar')
-                .attr('width', width)
-                .attr('height', slider.height - slider.mTop * 2)
+        slider.svg.attr("width", width + 2 * slider.mLeft)
+            .attr("height", slider.height)
+            .append("rect")
+                .attr("class", "slideBar")
+                .attr("width", width)
+                .attr("height", slider.height - slider.mTop * 2)
                 .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`);
 
         //Numbered tick marks
-        slider.svg.append('g')
+        slider.svg.append("g")
             .attr("id", "sliderAxis")
             .attr("transform", `translate(${slider.mLeft}, ${slider.height - slider.mTop})`)
             .call(d3.axisBottom(yearScale)
@@ -517,8 +603,8 @@
                     .tickFormat(d3.format("d")));
 
         // Unlabelled ticks
-        slider.svg.append('g')
-            .attr("id", 'sliderLines')
+        slider.svg.append("g")
+            .attr("id", "sliderLines")
             .attr("transform", `translate(${slider.mLeft}, ${slider.mTop})`)
             .call(d3.axisBottom(yearScale)
                     .tickSize(slider.height - slider.mTop * 2)
