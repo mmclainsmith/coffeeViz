@@ -15,13 +15,14 @@
       --green: #839153;
       --b-grey: #C2CAD0;
       --grey: gainsboro;
-      --time: .5s;
+      --time: .2s;
     }
 
     body {
         background: var(--light-green);
         text-align: center;
         margin: 0;
+        font-family: sans-serif;
     }
 
     h1 {
@@ -33,7 +34,6 @@
     }
 
     h2, h3 {
-        font-family: sans-serif;
         margin: 2px;
     }
     h2 {
@@ -104,6 +104,11 @@
     .Eline { /* export */
         fill: none;
         stroke: blue;
+        stroke-width: 2px;
+    }
+    .Sline { /* export */
+        fill: none;
+        stroke: purple;
         stroke-width: 2px;
     }
 
@@ -202,6 +207,10 @@
     }
 
     .monthFilterButton.down text{
+        fill: var(--dark-brown);
+    }
+
+    text.harvest {
         fill: var(--dark-brown);
     }
 
@@ -352,7 +361,7 @@
             drawLineChart(selected[0]);
             // drawBarChart(selected[0]);
         } else if (selected.length > 1) { // TODO: add multiple selections
-        	drawBarChart(selected[0])
+        	//drawBarChart(selected[0])
         } else {
             d3.select("#lower *").remove();
         }
@@ -441,6 +450,14 @@
                     filterByMonth(d[1]);
                 });
 
+        svg.select(".monthFilterButton")
+            .append("text")
+            .attr("class", "harvest")
+            .attr("dy", -10)
+            .attr("text-anchor", "middle")
+            .attr("dx", 40)
+            .text("Harvest month");
+
         monthBoxes.append("rect")
                 .attr("height", monthScale.bandwidth())
                 .attr("width", 80)
@@ -507,6 +524,7 @@
                         d3.max(d, d2 => d2["prod"]),
                         d3.max(d, d2 => d2["consum"]),
                         d3.max(d, d2 => d2["export"]),
+                        d3.max(d, d2 => d2["stock"]),
                     ]})
                     .object(data)
 
@@ -527,9 +545,13 @@
         	.x(function(d) { return x(d.year); })
         	.y(function(d) { return y(d.export); });
 
+        let stockLine = d3.line()
+        	.x(function(d) { return x(d.year); })
+        	.y(function(d) { return y(d.stock); });
+
         // append svg
-        let svg2 = d3.select("#lower")
-        svg2.selectAll("*").remove()
+        let svg2 = d3.select("#lower");
+        svg2.selectAll("*").remove();
 
         let graph = svg2.attr("width", width + margin.left + margin.right)
             .attr("height", 1000)
@@ -537,9 +559,9 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         // add the lines!
-        for (let i = 0; i < 3; i++) {
-        	var linetype = ["Cline", "Pline", "Eline"];
-        	var line = [consumptionLine, productionLine, exportLine];
+        for (let i = 0; i < 4; i++) {
+        	var linetype = ["Cline", "Pline", "Eline", "Sline"];
+        	var line = [consumptionLine, productionLine, exportLine, stockLine];
         	graph.append("path")
 	            .data([data])
 	            .attr("class", linetype[i])
@@ -571,9 +593,9 @@
         	.text("Thousand 60kg bags of green coffee");
 
         // add legend
-        for (let i = 0; i < 3; i++) {
-        	var linetypes = ["Consumption", "Export", "Production"];
-        	var colors = ["brown", "blue", "green"];
+        for (let i = 0; i < 4; i++) {
+        	var linetypes = ["Consumption", "Export", "Production", "Stock"];
+        	var colors = ["brown", "blue", "green", "purple"];
         	graph.append("rect")
 				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
 				.attr("width", 20)
