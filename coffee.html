@@ -13,9 +13,14 @@
       --light-brown: #C2B9B0;
       --light-green: #fcfcf6;
       --green: #839153;
-      --b-grey: #C2CAD0;
+      --b-grey: #B7CEEC; /* water */
       --grey: gainsboro;
       --time: .2s;
+
+      --color_consum: #4F2D0D;
+      --color_export: #1F45FC;
+      --color_prod: #348017;
+      --color_stock: #990012;
     }
 
     body {
@@ -87,30 +92,12 @@
 
     .line {
     	fill: none;
-    	stroke: black;
     	stroke-width: 2px;
     }
-
-    .Cline { /* consumption */
-        fill: none;
-        stroke: brown;
-        stroke-width: 2px;
-    }
-    .Pline { /* production */
-        fill: none;
-        stroke: green;
-        stroke-width: 2px;
-    }
-    .Eline { /* export */
-        fill: none;
-        stroke: blue;
-        stroke-width: 2px;
-    }
-    .Sline { /* export */
-        fill: none;
-        stroke: purple;
-        stroke-width: 2px;
-    }
+    .line.consumption { stroke: var(--color_consum); }
+    .line.export { stroke: var(--color_export); }
+    .line.production { stroke: var(--color_prod); }
+    .line.stock { stroke: var(--color_stock); }
 
     .bar {
     	fill: var(--dark-brown);
@@ -125,7 +112,7 @@
         fill: var(--grey);
     }
 
-    .monthFilterButton{
+    .monthFilterButton {
         display: inline-block;
         margin: 3px;
         padding: 5px;
@@ -147,17 +134,21 @@
     }
 
     .catFilterButton {
-        flex-grow: 1;
+    	flex-grow: 1;
         margin: 0;
         padding: 5px 0;
+    	box-sizing: border-box;
         background-color: var(--light-brown);
-        box-sizing: border-box;
         color: var(--dark-brown);
     }
-    .catFilterButton.down{
-        background-color: var(--green);
-        color: black;
+    .catFilterButton.down {
+    	background-color: var(--green);
+        color: white;
     }
+    .catFilterButton.down.consum { background-color: var(--color_consum); }
+    .catFilterButton.down.export { background-color: var(--color_export); }
+    .catFilterButton.down.prod { background-color: var(--color_prod); }
+    .catFilterButton.down.stock { background-color: var(--color_stock); }
 
     .catFilterButton:hover{
         filter: brightness(90%);
@@ -220,6 +211,19 @@
         margin: 10px;
     }
 
+    div.tooltip {
+	  position: absolute;
+	  text-align: center;
+	  width: 60px;
+	  height: 28px;
+	  padding: 2px;
+	  font: 12px sans-serif;
+	  background: var(--grey);
+	  border: 0px;
+	  border-radius: 8px;
+	  pointer-events: none;
+	}
+
 </style>
 </head>
 
@@ -229,10 +233,10 @@
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
 
 <div id = "catBtns">
-    <div class ="catFilterButton down" id="prod"> Production </div>
-    <div class ="catFilterButton" id="consum"> Consumption </div>
-    <div class ="catFilterButton" id="export"> Export </div>
-    <div class ="catFilterButton" id="stock"> Opening Stock </div>
+    <div class ="catFilterButton down prod" id="prod"> Production </div>
+    <div class ="catFilterButton consum" id="consum"> Consumption </div>
+    <div class ="catFilterButton export" id="export"> Export </div>
+    <div class ="catFilterButton stock" id="stock"> Opening Stock </div>
 </div>
 <svg width="980" height="270" id="main"></svg>
 
@@ -268,7 +272,6 @@
 
     let graticule = d3.geoGraticule().step([5, 5]);
 
-
     svg.append("path")
         .datum(graticule)
         .attr("class", "graticule")
@@ -279,6 +282,9 @@
         updatedSelected();
     });
 
+    var div = d3.select("body").append("div") // TODO: tooltip
+        .attr("class", "tooltip")
+        .style("opacity", 0);
 
 /******************************************************************************
             Reading in data
@@ -304,7 +310,6 @@
 
     function ready(error, world, data) {
         if (error) throw error;
-
 
         dataByCountry = dataByCountry
             .key(function(d) { return d.country; })
@@ -333,11 +338,10 @@
 
         d3.selectAll(".catFilterButton")
             .on("click", function(d) {
-                console.log(d3.select(this))
                 cStat = d3.select(this).attr("id");
                 d3.selectAll(".catFilterButton").classed("down", false);
                 d3.select(this).classed("down", true);
-                colorMap();
+                colorMap(cStat);
             });
 
         makeMonthSelectors()
@@ -385,7 +389,6 @@
     }
 
     function startCountrySelect(d){
-        //console.log("start");
         d3.select("#main")
             .append("rect");
     }
@@ -395,8 +398,6 @@
     }
 
     function endCountrySelect(d){
-
-        console.log("end");
         select([d.name], d3.event.sourceEvent.shiftKey);
     }
 
@@ -462,7 +463,6 @@
                 .attr("height", monthScale.bandwidth())
                 .attr("width", 80)
 
-
         monthBoxes.append("text")
                 .attr("dy", ".35em")
                 .attr("dx", 40)
@@ -486,10 +486,19 @@
     }
 
 /*******************************  Color Map **********************************/
-    let mapColors = d3.scaleLinear().range(["#C2B9B0", "#4F2D0D"]);
+    let color_consum = "#4F2D0D";
+    let color_export = "#1F45FC";
+    let color_prod = "#348017";
+    let color_stock = "#990012";
 
+    let mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]);
 
-    function colorMap(){
+    function colorMap(type){
+    	if (type == "consum") { mapColors = d3.scaleLinear().range(["#fee6ce", color_consum]); }
+    	if (type == "export") { mapColors = d3.scaleLinear().range(["#deebf7", "#0000A0"]); }
+    	if (type == "prod") { mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]); }
+    	if (type == "stock") { mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]); }
+
         let sums = {};
         svg.selectAll(".coffee:not(.unclickable)")
             .each(d => {
@@ -560,7 +569,7 @@
 
         // add the lines!
         for (let i = 0; i < 4; i++) {
-        	var linetype = ["Cline", "Pline", "Eline", "Sline"];
+        	var linetype = ["line consumption", "line production", "line export", "line stock"];
         	var line = [consumptionLine, productionLine, exportLine, stockLine];
         	graph.append("path")
 	            .data([data])
@@ -590,12 +599,12 @@
         	.attr("x", 0 - (height / 2))
         	.attr("dy", "1em")
         	.style("text-anchor", "middle")
-        	.text("Thousand 60kg bags of green coffee");
+        	.text("Thousand 60kg bags of unroasted coffee");
 
         // add legend
         for (let i = 0; i < 4; i++) {
-        	var linetypes = ["Consumption", "Export", "Production", "Stock"];
-        	var colors = ["brown", "blue", "green", "purple"];
+        	var linetypes = ["Stock", "Export", "Consumption", "Production"];
+        	var colors = [color_stock, color_export, color_consum, color_prod];
         	graph.append("rect")
 				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
 				.attr("width", 20)
@@ -618,7 +627,7 @@
                       width = 960 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
         // axis ranges
-        let x = d3.scaleBand().domain([0, 10]).range([0, width]); //TODO: change domain to number of countries
+        let x = d3.scaleBand().padding(0.1).domain([0, 10]).range([0, width]); //TODO: change domain to number of countries
         let y = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.prod; })]).range([height, 0]);
 
         let svg2 = d3.select("#lower")
@@ -632,8 +641,8 @@
         svg2.selectAll(".bar").data([data])
         	.enter().append("rect")
         		.attr("class", "bar")
-        		.attr("x", function(d) { return x(0); })
-        		.attr("width", 50)
+        		.attr("x", function(d) { return x(d[27].country); })
+        		.attr("width", x.bandwidth())
         		.attr("y", function(d) { return y(d[27].prod); })
         		.attr("height", function(d) { return height - y(d[27].prod); });
 
@@ -646,7 +655,6 @@
         graph.append("g")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
-
         graph.append("text")
         	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
         	.style("text-anchor", "middle")
@@ -655,14 +663,13 @@
         // add Y axis
         graph.append("g")
             .call(d3.axisLeft(y));
-
         graph.append("text")
         	.attr("transform", "rotate(-90)")
         	.attr("y", 0 - margin.left)
         	.attr("x", 0 - (height / 2))
         	.attr("dy", "1em")
         	.style("text-anchor", "middle")
-        	.text("Production per thousand 60kg bags of green coffee");
+        	.text("Production per thousand 60kg bags of unroasted coffee");
     }
 
 
@@ -677,7 +684,7 @@
                         mLeft: 20 }
 
         let yearScale = d3.scaleLinear()
-                            .domain([1990, 2018])
+                            .domain([1990, 2017])
                             .range([0, width - 1]);
 
         // Allowed sliding area
