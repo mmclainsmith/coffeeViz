@@ -49,6 +49,18 @@
         font-weight: lighter;
     }
 
+    h4 { /* for stock description */
+    	color: black;
+    	font-weight: 300;
+    	margin: 5px;
+    	opacity: 0;
+    }
+
+    h5 {
+    	font-weight: 300;
+    	margin: 5px;
+    }
+
     svg {
         margin: 0 auto;
         display: block;
@@ -56,6 +68,10 @@
 
     div {
         transition: var(--time);
+    }
+
+    a {
+    	color: blue;
     }
 
     .graticule {
@@ -207,8 +223,10 @@
 
     #selected a {
         font-family: "Mali";
+        font-weight: bold;
         display: inline-block;
         margin: 10px;
+        color: black;
     }
 
     div.tooltip {
@@ -231,6 +249,7 @@
 <h1> Coffee </h1>
 <h2> A look at coffee production around the world </h2>
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
+<h4 id = stockdescription> Gross opening stock refers to the amount of coffee held at the beginning of a crop year to manage surplus.</h4>
 
 <div id = "catBtns">
     <div class ="catFilterButton down prod" id="prod"> Production </div>
@@ -244,6 +263,7 @@
 <div id="selected"></div>
 <svg id="lower"></svg>
 
+<h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
 <script src="js/d3.v4.min.js"></script>
 <script src="js/topojson.v1.min.js"></script>
@@ -332,10 +352,12 @@
                 .datum(function(d) { return {"name":d.properties.name, "data":dataByCountry[d.properties.name] } })
                 // Tooltip
                 .on("mouseover", function(d) {
-                	div.transition().duration(200).style("opacity", 0.9);
-                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
-                		.style("left", (d3.event.pageX) + "px")
-                		.style("top", (d3.event.pageY - 28) + "px");
+                	if (!(d3.select(this).classed("unclickable"))) {
+	                	div.transition().duration(200).style("opacity", 0.9);
+	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
+	                		.style("left", (d3.event.pageX + 10) + "px")
+	                		.style("top", (d3.event.pageY - 28) + "px");
+                	}
                 })
                 .on("mouseout", function (d) {
                 	div.transition().duration(500).style("opacity", 0);
@@ -436,6 +458,13 @@
         updatedSelected()
     }
 
+    function addStockDescription() {
+    	document.getElementById("stockdescription").style.opacity = 1; 
+    }
+    function removeStockDescription() {
+    	document.getElementById("stockdescription").style.opacity = 0;
+    }
+
 
 /*****************************  Month Filters ********************************/
     function makeMonthSelectors(){
@@ -507,7 +536,11 @@
     	if (type == "consum") { mapColors = d3.scaleLinear().range(["#fee6ce", color_consum]); }
     	if (type == "export") { mapColors = d3.scaleLinear().range(["#deebf7", "#0000A0"]); }
     	if (type == "prod") { mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]); }
-    	if (type == "stock") { mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]); }
+    	if (type == "stock") { 
+    		addStockDescription();
+    		mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]); 
+    	}
+    	else { removeStockDescription(); }
 
         let sums = {};
         svg.selectAll(".coffee:not(.unclickable)")
@@ -534,7 +567,7 @@
 
         // dimensions of graph
         let margin = {top: 20, right: 105, bottom: 30, left: 70},
-                      width = 960 - margin.left - margin.right,
+                      width = 980 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
 
         // axis ranges
@@ -594,7 +627,7 @@
 
         // label X axis
         graph.append("text")
-        	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
+        	.attr("transform", "translate(" + (width/2 + 18) + "," + (height + margin.top + 20) + ")")
         	.style("text-anchor", "middle")
         	.text("Year");
 
