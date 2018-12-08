@@ -486,10 +486,17 @@
     }
 
 /*******************************  Color Map **********************************/
-    let mapColors = d3.scaleLinear().range(["#C2B9B0", "#4F2D0D"]);
 
 
     function colorMap(){
+
+        let colorFunc = function(min, max){
+
+            let mapColors = d3.scaleLinear().range(["#C2B9B0", "#4F2D0D"]).domain([0,1]);
+            let logScale = d3.scaleLog().range([0,1]).domain([min+.1e-6, max]);
+            return function(d){return mapColors(logScale(d+.001))};
+        }
+
         let sums = {};
         svg.selectAll(".coffee:not(.unclickable)")
             .each(d => {
@@ -499,10 +506,12 @@
                 }
             );
         let sumsArr = Object.values(sums);
-        let colors = mapColors.domain([d3.min(sumsArr), d3.max(sumsArr)])
-
+        console.log( d3.min(sumsArr)  )
+        let color = colorFunc( d3.min(sumsArr), d3.max(sumsArr) );
+        console.log(color);
+        console.log(color(2));
         svg.selectAll(".coffee")
-            .style("fill", d => colors(sums[d.name]) );
+            .style("fill", d => color(sums[d.name]) );
     }
 
 /*****************************************************************************
