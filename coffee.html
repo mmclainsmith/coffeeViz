@@ -49,11 +49,10 @@
         font-weight: lighter;
     }
 
-    h4 { /* for stock description */
+    h4 {
     	color: black;
     	font-weight: 300;
     	margin: 5px;
-    	opacity: 0;
     }
 
     h5 {
@@ -249,7 +248,7 @@
 <h1> Coffee </h1>
 <h2> A look at coffee production around the world </h2>
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
-<h4 id = stockdescription> Gross opening stock refers to the amount of coffee held at the beginning of a crop year to manage surplus.</h4>
+<h4> Note: Units are per thousand 60kg bag of unroasted coffee. </h4>
 
 <div id = "catBtns">
     <div class ="catFilterButton down prod" id="prod"> Production </div>
@@ -459,10 +458,10 @@
     }
 
     function addStockDescription() {
-    	document.getElementById("stockdescription").style.opacity = 1; 
+    	d3.selectAll("h4").text("Note: Gross opening stock refers to the amount of coffee held at the beginning of a crop year to manage surplus."); 
     }
     function removeStockDescription() {
-    	document.getElementById("stockdescription").style.opacity = 0;
+    	d3.selectAll("h4").text("Note: Units are per thousand 60kg bag of unroasted coffee.");
     }
 
 
