@@ -533,7 +533,7 @@
         let data = dataByCountry[countryName];
 
         // dimensions of graph
-        let margin = {top: 20, right: 20, bottom: 30, left: 70},
+        let margin = {top: 20, right: 105, bottom: 30, left: 70},
                       width = 960 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
 
@@ -613,15 +613,15 @@
 
         // add legend
         for (let i = 0; i < 4; i++) {
-        	var linetypes = ["Stock", "Export", "Consumption", "Production"];
-        	var colors = [color_stock, color_export, color_consum, color_prod];
+        	var linetypes = ["Production", "Consumption", "Export", "Stock"];
+        	var colors = [color_prod, color_consum, color_export, color_stock];
         	graph.append("rect")
-				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
+				.attr("transform", "translate(" + (width + 45) + "," + (70 + 70*(i-1)) + ")")
 				.attr("width", 20)
 				.attr("height", 20)
 				.attr("fill", colors[i]);
 			graph.append("text")
-	        	.attr("transform", "translate(" + (width/2 - (100*(i-1)) + 10) + "," + (height + margin.top + 85) + ")")
+	        	.attr("transform", "translate(" + (width + 55) + "," + (110 + 70*(i-1)) + ")")
 	        	.style("text-anchor", "middle")
 	        	.text(linetypes[i]);
         }
@@ -633,7 +633,7 @@
         let data = dataByCountry[countryName];
 
         // dimensions of graph
-        let margin = {top: 20, right: 20, bottom: 30, left: 70},
+        let margin = {top: 20, right: 100, bottom: 30, left: 70},
                       width = 960 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
         // axis ranges
