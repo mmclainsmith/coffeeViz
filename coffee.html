@@ -241,6 +241,20 @@
 	  pointer-events: none;
 	}
 
+	/* MAP LEGEND */
+	.prod-left { stop-color: #f7fcf5; }
+	.prod-right { stop-color: #254117; }
+	.consum-left { stop-color: #fee6ce; }
+	.consum-right { stop-color: #4F2D0D; }
+	.export-left { stop-color: #deebf7; }
+	.export-right { stop-color: #0000A0; }
+	.stock-left { stop-color: #fff5f0; }
+	.stock-right { stop-color: #a50f15; }
+	.filled {
+		fill: url(#gradient);
+		stroke: grey;
+	}
+
 </style>
 </head>
 
@@ -257,7 +271,7 @@
     <div class ="catFilterButton stock" id="stock"> Opening Stock </div>
 </div>
 <svg width="980" height="270" id="main"></svg>
-
+<div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
 <svg id="lower"></svg>
@@ -275,8 +289,12 @@
     let catAbvs = {"Production":"prod", "Export":"exp", "Consumption":"consum", "Stock":"stock"};
     let month_abv = {"April":"apr", "July":"jul", "October":"oct"};
     let cats = ["prod", "consum", "export", "stock"];
-
-
+    // COLORS
+    let color_consum = "#4F2D0D", color_consum1 = "#fee6ce", color_consum2 = color_consum;
+    let color_export = "#1F45FC", color_export1 = "#deebf7", color_export2 = "#0000A0";
+    let color_prod = "#348017", color_prod1 = "#f7fcf5", color_prod2 = "#254117";
+    let color_stock = "#990012", color_stock1 = "#fff5f0", color_stock2 = "#a50f15";
+      
     // This is horrifying, forgive me Mark.
     let startYear = 1998,
         endYear = 2004,
@@ -382,7 +400,52 @@
 
         makeMonthSelectors()
         colorMap();
-    };
+	};
+
+    // Map legend -- gradient courtesy of http://bl.ocks.org/pnavarrc/20950640812489f13246
+    // Updating aspect of gradient courtesy of LEXIE'S STRUGGLING
+
+    var newsvg = d3.select("#svg-container").append('svg');
+    newsvg.attr('width', width).attr('height', 0);
+
+    var svgDefs = newsvg.append('defs');
+
+    var gradient = svgDefs.append('linearGradient')
+        .attr('id', 'gradient');
+
+    gradient.append('stop')
+        .attr('stop-color', color_prod1)
+        .attr('offset', '0');
+
+    gradient.append('stop')
+        .attr('offset', '1')
+        .attr('stop-color', color_prod2);
+
+    svg.append('rect')
+        .classed('filled', true)
+        .attr('x', 600)
+        .attr('y', height/2 + 100)
+        .attr('width', 200)
+        .attr('height', 20);
+
+    function changeGradient(type) {
+    	var color1, color2;
+    	if (type == 'prod')   {color1 = color_prod1; color2 = color_prod2; }
+    	if (type == 'consum') {color1 = color_consum1; color2 = color_consum2; }
+    	if (type == 'export') {color1 = color_export1; color2 = color_export2; }
+    	if (type == 'stock')  {color1 = color_stock1; color2 = color_stock2; }
+
+    	gradient.selectAll('stop').remove();
+
+    	gradient.append('stop')
+	        .attr('stop-color', color1)
+	        .attr('offset', '0');
+
+    	gradient.append('stop')
+	        .attr('stop-color', color2)
+	        .attr('offset', '1');
+    }
+    
 
 /*****************************************************************************
                 Interactions Handlers
@@ -529,21 +592,21 @@
     }
 
 /*******************************  Color Map **********************************/
-    let color_consum = "#4F2D0D";
-    let color_export = "#1F45FC";
-    let color_prod = "#348017";
-    let color_stock = "#990012";
 
     let mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]);
 
     function colorMap(){
-    	if (cStat == "consum") { mapColors = d3.scaleLinear().range(["#fee6ce", color_consum]); }
-    	if (cStat == "export") { mapColors = d3.scaleLinear().range(["#deebf7", "#0000A0"]); }
-    	if (cStat == "prod") { mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]); }
+    	if (cStat == "consum") { 
+    		mapColors = d3.scaleLinear().range([color_consum1, color_consum2]); 
+    	}
+    	if (cStat == "export") { mapColors = d3.scaleLinear().range([color_export1, color_export2]); }
+    	if (cStat == "prod") { mapColors = d3.scaleLinear().range([color_prod1, color_prod2]); }
     	if (cStat == "stock") {
             addStockDescription();
-            mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]);
+            mapColors = d3.scaleLinear().range([color_stock1, color_stock2]);
         }
+        else { removeStockDescription(); }
+        changeGradient(cStat);
 
     // function colorMap(){
     //
@@ -635,7 +698,7 @@
 
         // label X axis
         graph.append("text")
-        	.attr("transform", "translate(" + (width/2 + 18) + "," + (height + margin.top + 20) + ")")
+        	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
         	.style("text-anchor", "middle")
         	.text("Year");
 
@@ -844,7 +907,7 @@
             max = rollup(maxF);
             min = rollup(minF)
         }
-        console.log( min, max, rolledUp )
+        // console.log( min, max, rolledUp )
         return [min, max, rolledUp]
     }
 
