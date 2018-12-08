@@ -232,7 +232,7 @@
 	  position: absolute;
 	  text-align: center;
 	  width: 100px;
-	  height: 50px;
+	  height: 40px;
 	  padding: 5px;
 	  font: 12px sans-serif;
 	  background: var(--grey);
@@ -353,8 +353,11 @@
                 .attr("id", d => clean(d.name) )
                 .on("mouseover", function(d) {
                 	if (!(d3.select(this).classed("unclickable"))) {
+                		let min, max, rolledUp;
+                		[min, max, rolledUp] = rollupByYears();
+
 	                	div.transition().duration(200).style("opacity", 0.9);
-	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
+	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + " bags")
 	                		.style("left", (d3.event.pageX + 10) + "px")
 	                		.style("top", (d3.event.pageY - 28) + "px");
                 	}
