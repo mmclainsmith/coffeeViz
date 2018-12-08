@@ -214,9 +214,9 @@
     div.tooltip {
 	  position: absolute;
 	  text-align: center;
-	  width: 60px;
-	  height: 28px;
-	  padding: 2px;
+	  width: 100px;
+	  height: 50px;
+	  padding: 5px;
 	  font: 12px sans-serif;
 	  background: var(--grey);
 	  border: 0px;
@@ -282,7 +282,7 @@
         updatedSelected();
     });
 
-    var div = d3.select("body").append("div") // TODO: tooltip
+    var div = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("opacity", 0);
 
@@ -330,6 +330,16 @@
 
         svg.selectAll(".coffee")
                 .datum(function(d) { return {"name":d.properties.name, "data":dataByCountry[d.properties.name] } })
+                // Tooltip
+                .on("mouseover", function(d) {
+                	div.transition().duration(200).style("opacity", 0.9);
+                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
+                		.style("left", (d3.event.pageX) + "px")
+                		.style("top", (d3.event.pageY - 28) + "px");
+                })
+                .on("mouseout", function (d) {
+                	div.transition().duration(500).style("opacity", 0);
+                })
                 .on("click", d => d3.event.stopPropagation() )
                 .call(d3.drag()
                     .on("start", startCountrySelect)
@@ -352,6 +362,7 @@
                 Interactions Handlers
  *****************************************************************************/
     let selected = []
+
     function updatedSelected() {
         // Remove unclickable things from selected
         svg.selectAll(".coffee.unclickable")
@@ -382,7 +393,6 @@
         d3.select("#selected").selectAll("a")
             .data(selected)
             .enter().append("a")
-                //.on("click", function)
                 .html(function(d){
                      return d;
                 })
