@@ -49,6 +49,17 @@
         font-weight: lighter;
     }
 
+    h4 {
+    	color: black;
+    	font-weight: 300;
+    	margin: 5px;
+    }
+
+    h5 {
+    	font-weight: 300;
+    	margin: 5px;
+    }
+
     svg {
         margin: 0 auto;
         display: block;
@@ -56,6 +67,10 @@
 
     div {
         transition: var(--time);
+    }
+
+    a {
+    	color: blue;
     }
 
     .graticule {
@@ -207,8 +222,10 @@
 
     #selected a {
         font-family: "Mali";
+        font-weight: bold;
         display: inline-block;
         margin: 10px;
+        color: black;
     }
 
     div.tooltip {
@@ -231,6 +248,7 @@
 <h1> Coffee </h1>
 <h2> A look at coffee production around the world </h2>
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
+<h4> Note: Units are per thousand 60kg bag of unroasted coffee. </h4>
 
 <div id = "catBtns">
     <div class ="catFilterButton down prod" id="prod"> Production </div>
@@ -244,6 +262,7 @@
 <div id="selected"></div>
 <svg id="lower"></svg>
 
+<h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
 <script src="js/d3.v4.min.js"></script>
 <script src="js/topojson.v1.min.js"></script>
@@ -334,10 +353,12 @@
                 .datum(function(d) { return {"name":d.properties.name, "data":dataByCountry[d.properties.name] } })
                 // Tooltip
                 .on("mouseover", function(d) {
-                	div.transition().duration(200).style("opacity", 0.9);
-                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
-                		.style("left", (d3.event.pageX) + "px")
-                		.style("top", (d3.event.pageY - 28) + "px");
+                	if (!(d3.select(this).classed("unclickable"))) {
+	                	div.transition().duration(200).style("opacity", 0.9);
+	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + "Production in 2017: " + d3.format("d")(d.data[27].prod))
+	                		.style("left", (d3.event.pageX + 10) + "px")
+	                		.style("top", (d3.event.pageY - 28) + "px");
+                	}
                 })
                 .on("mouseout", function (d) {
                 	div.transition().duration(500).style("opacity", 0);
@@ -438,6 +459,13 @@
         updatedSelected()
     }
 
+    function addStockDescription() {
+    	d3.selectAll("h4").text("Note: Gross opening stock refers to the amount of coffee held at the beginning of a crop year to manage surplus.");
+    }
+    function removeStockDescription() {
+    	d3.selectAll("h4").text("Note: Units are per thousand 60kg bag of unroasted coffee.");
+    }
+
 
 /*****************************  Month Filters ********************************/
     function makeMonthSelectors(){
@@ -509,7 +537,10 @@
     	if (cStat == "consum") { mapColors = d3.scaleLinear().range(["#fee6ce", color_consum]); }
     	if (cStat == "export") { mapColors = d3.scaleLinear().range(["#deebf7", "#0000A0"]); }
     	if (cStat == "prod") { mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]); }
-    	if (cStat == "stock") { mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]); }
+    	if (cStat == "stock") {
+            addStockDescription();
+            mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]);
+        }
 
     // function colorMap(){
     //
@@ -538,8 +569,8 @@
         let data = dataByCountry[countryName];
 
         // dimensions of graph
-        let margin = {top: 20, right: 20, bottom: 30, left: 70},
-                      width = 960 - margin.left - margin.right,
+        let margin = {top: 20, right: 105, bottom: 30, left: 70},
+                      width = 980 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
 
         // axis ranges
@@ -601,7 +632,7 @@
 
         // label X axis
         graph.append("text")
-        	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
+        	.attr("transform", "translate(" + (width/2 + 18) + "," + (height + margin.top + 20) + ")")
         	.style("text-anchor", "middle")
         	.text("Year");
 
@@ -620,15 +651,15 @@
 
         // add legend
         for (let i = 0; i < 4; i++) {
-        	var linetypes = ["Stock", "Export", "Consumption", "Production"];
-        	var colors = [color_stock, color_export, color_consum, color_prod];
+        	var linetypes = ["Production", "Consumption", "Export", "Stock"];
+        	var colors = [color_prod, color_consum, color_export, color_stock];
         	graph.append("rect")
-				.attr("transform", "translate(" + (width/2 - (100*(i-1))) + "," + (height + margin.top + 50) + ")")
+				.attr("transform", "translate(" + (width + 45) + "," + (70 + 70*(i-1)) + ")")
 				.attr("width", 20)
 				.attr("height", 20)
 				.attr("fill", colors[i]);
 			graph.append("text")
-	        	.attr("transform", "translate(" + (width/2 - (100*(i-1)) + 10) + "," + (height + margin.top + 85) + ")")
+	        	.attr("transform", "translate(" + (width + 55) + "," + (110 + 70*(i-1)) + ")")
 	        	.style("text-anchor", "middle")
 	        	.text(linetypes[i]);
         }
@@ -640,7 +671,7 @@
         let data = dataByCountry[countryName];
 
         // dimensions of graph
-        let margin = {top: 20, right: 20, bottom: 30, left: 70},
+        let margin = {top: 20, right: 100, bottom: 30, left: 70},
                       width = 960 - margin.left - margin.right,
                       height = 300 - margin.top - margin.bottom;
         // axis ranges
