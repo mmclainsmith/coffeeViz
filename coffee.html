@@ -355,9 +355,14 @@
                 	if (!(d3.select(this).classed("unclickable"))) {
                 		let min, max, rolledUp;
                 		[min, max, rolledUp] = rollupByYears();
-
+                        let name;
+                        if (d.name == "Democratic Republic of the Congo") {
+                            name = "DR Congo";
+                        } else {
+                            name = d.name;
+                        }
 	                	div.transition().duration(200).style("opacity", 0.9);
-	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + " bags")
+	                	div.html("<b>"+ name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + " bags")
 	                		.style("left", (d3.event.pageX + 10) + "px")
 	                		.style("top", (d3.event.pageY - 28) + "px");
                 	}
@@ -543,6 +548,8 @@
     	if (cStat == "stock") {
             addStockDescription();
             mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]);
+        } else {
+            removeStockDescription();
         }
 
     // function colorMap(){
