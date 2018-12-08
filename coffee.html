@@ -282,6 +282,7 @@
 <script src="js/topojson.v1.min.js"></script>
 
 <script>
+    let clean = s => s.replace(/\W/g, '');
     let svg = d3.select("#main"),
         width = +svg.attr("width"),
         height = +svg.attr("height");
@@ -354,8 +355,6 @@
             .key(function(d) { return d.country; })
             .object(data);
 
-        makeSlider()
-
         // Draw countries
         svg.append("g")
             .selectAll(".country")
@@ -369,14 +368,19 @@
 
         svg.selectAll(".coffee")
                 .datum(function(d) { return {"name":d.properties.name, "data":dataByCountry[d.properties.name] } })
-                // Tooltip
+                .attr("id", d => clean(d.name) )
                 .on("mouseover", function(d) {
                 	if (!(d3.select(this).classed("unclickable"))) {
                 		let min, max, rolledUp;
                 		[min, max, rolledUp] = rollupByYears();
-
+                        let name;
+                        if (d.name == "Democratic Republic of the Congo") {
+                            name = "DR Congo";
+                        } else {
+                            name = d.name;
+                        }
 	                	div.transition().duration(200).style("opacity", 0.9);
-	                	div.html("<b>"+ d.name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + " bags")
+	                	div.html("<b>"+ name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + " bags")
 	                		.style("left", (d3.event.pageX + 10) + "px")
 	                		.style("top", (d3.event.pageY - 28) + "px");
                 	}
@@ -398,7 +402,8 @@
                 colorMap();
             });
 
-        makeMonthSelectors()
+        makeSlider();
+        makeMonthSelectors();
         colorMap();
 	};
 
@@ -604,6 +609,7 @@
     	if (cStat == "stock") {
             addStockDescription();
             mapColors = d3.scaleLinear().range([color_stock1, color_stock2]);
+            //mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]);
         }
         else { removeStockDescription(); }
         changeGradient(cStat);
@@ -883,6 +889,8 @@
             let maxF = (s, d) => d3.max(d, d2 => d2[1][s]);
 
             for (let country in dataByCountry){
+                let id = `path#${clean(country)}`;
+                let visible = !d3.select(id).classed("unclickable");
                 rolledUp[country] =  d3.nest()
                         .rollup(d => {
                             let data = {}
@@ -891,7 +899,7 @@
                             });
                             return data;
                         }).entries(
-                            dataByCountry[country].filter( d => (startYear <= d.year && d.year < endYear))
+                            dataByCountry[country].filter( d => (startYear <= d.year && d.year < endYear && visible))
                         );
             }
 
