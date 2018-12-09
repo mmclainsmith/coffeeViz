@@ -39,15 +39,14 @@
         let s = n;
         if (n == "Democratic Republic of the Congo") {
             s = "DR Congo";
-        }
-        if (n == "Republic of the Congo") {
+        } else if (n == "Republic of the Congo") {
             s = "Congo";
-        }
-        if (n == "United Republic of Tanzania") {
+        }else if (n == "United Republic of Tanzania") {
             s = "Tanzania";
-        }
-        if (n == "Central African Republic") {
+        } else if (n == "Central African Republic") {
             s = "CAR";
+        } else if (n == "Trinidad and Tobago") {
+            s = "Trinidad/Tobago"
         }
         return s;
     }
@@ -545,7 +544,7 @@
 
     class BarChart {
         constructor(stat, svg, yAxis, width) {
-            this.margin = {top: 0, right: 70, bottom: 0, left: 70};
+            this.margin = {top: 0, right: 70, bottom: 0, left: 80};
             this.width = width + this.margin.left + this.margin.right;
 
             this.stat = stat;
@@ -628,7 +627,7 @@
     class BarChartTotal {
         constructor() {
             this.div= d3.select("#chart").style("display", "none")
-            let width = 350;
+            let width = 360;
             this.x = {};
             stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]).range([0, width]));
 

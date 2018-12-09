@@ -240,11 +240,10 @@ div.tooltip {
 }
 
 #chart {
+    margin-left: -35px;
     display: flex;
     flex-wrap: wrap;
-    align-content: center;
-    width: 1000px;
-    margin: 0 auto;
+    justify-content: center;
     margin-bottom: 20px;
 }
 #chart div {
