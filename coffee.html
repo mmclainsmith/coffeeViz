@@ -271,8 +271,6 @@
         if (selected.length == 1) {
             lineChart.draw(selected[0]);
             barChart.hide();
-            var elmnt = document.getElementById("selected");
-            elmnt.scrollIntoView({behavior: 'smooth'});
         } else if (selected.length > 1) {
             lineChart.hide();
         	barChart.update();
@@ -280,6 +278,8 @@
             lineChart.hide();
             barChart.hide();
         }
+        let elmnt = document.getElementById("selected");
+        elmnt.scrollIntoView({behavior: 'smooth'});
 
      //Update Map
         d3.selectAll(".coffee:not(.unclickable)")
