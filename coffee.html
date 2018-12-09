@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <title>Coffee</title>
 
+<script src="js/d3.v4.min.js"></script>
+<script src="js/topojson.v1.min.js"></script>
+
 <link rel="stylesheet" type="text/css" href="style.css">
 
 </head>
@@ -29,8 +32,7 @@
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
-<script src="js/d3.v4.min.js"></script>
-<script src="js/topojson.v1.min.js"></script>
+
 
 <script>
     let clean = s => s.replace(/\W/g, '');
@@ -57,11 +59,11 @@
     let stats = ["prod", "consum", "export", "stock"];
 
     // COLORS
-    let colors = {
-        "consum": ["#613f22", "#fee6ce", "#613f22"],
-        "export": ["#1F45FC", "#deebf7", "#0000A0"],
-        "prod": ["#5b6e1c", "#f7fcf5", "#5b6e1c"],
-        "stock": ["#990012", "#fff5f0", "#a50f15"]
+    let colors = { // line, light, dark
+        "consum": ["#613f22", "#fcfaf5", "#613f22"],
+        "export": ["#2a7a8c", "#f5fafc", "#2a7a8c"],
+        "prod":   ["#5b6e1c", "#f7fcf5", "#5b6e1c"],
+        "stock": ["#a03544", "#fcf5f6", "#993e4b"]
     }
 
 
@@ -171,7 +173,7 @@
                     .style("background-color", null);
                 d3.select(this)
                     .classed("down", true)
-                    .style("background-color", colors[cStat][0]);
+                    .style("background-color", colors[cStat][2]);
                 colorMap();
             });
 
@@ -349,10 +351,9 @@
                 .attr("width", 80)
 
         monthBoxes.append("text")
-                .attr("dy", ".35em")
+                .attr("dy", "1em")
                 .attr("dx", 40)
                 .text(d => d[0])
-                .attr("alignment-baseline","hanging")
                 .attr("text-anchor", "middle");
     }
 
@@ -449,7 +450,7 @@
             this.graph.append("text")
             	.attr("transform", "rotate(-90)")
             	.attr("y", 0 - this.margin.left)
-            	.attr("x", 0 - (this.height / 2))
+            	.attr("x", 0 - ((this.height + this.margin.top)/ 2))
             	.attr("dy", "1em")
             	.style("text-anchor", "middle")
             	.text("Thousand 60kg bags of unroasted coffee");
