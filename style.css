@@ -233,3 +233,8 @@ div.tooltip {
     stroke-opacity: .5;
     stroke-width: .5;
 }
+
+#map_key .domain, #map_key .tick line {
+    stroke: var(--darkest-brown);
+    stroke-width: .5;
+}

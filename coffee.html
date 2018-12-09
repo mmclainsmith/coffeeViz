@@ -32,8 +32,6 @@
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
-
-
 <script>
     let clean = s => s.replace(/\W/g, '');
 
@@ -234,7 +232,7 @@
 
         svg.selectAll('#map_key').remove();
 
-        let y = d3.scaleLinear().range([200, 0]).domain([max, min]);
+        let y = d3.scaleLinear().range([199, 0]).domain([max, min]);
         let yAxis = d3.axisBottom(y)
                         .tickValues([min, max])
                         .tickFormat(d=>`${d3.format(",d")(d)}k bags`);
