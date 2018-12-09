@@ -27,12 +27,15 @@
 <div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
+<<<<<<< HEAD
 <svg id="graph"></svg>
 <div id="chart"></div>
+=======
+<svg id="graph"></svg> <!-- line graph -->
+<svg id="chart"></svg>
+>>>>>>> 1c09ce7094f1b70121f6348de431ce595abd4452
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
-
-
 
 <script>
     let clean = s => s.replace(/\W/g, '');
@@ -211,11 +214,19 @@
     svg.append('rect')
         .classed('filled', true)
         .attr('x', 600)
-        .attr('y', height/2 + 100)
+        .attr('y', height/2 + 90)
         .attr('width', 200)
         .attr('height', 20);
 
-    function changeGradient() {
+    let y = d3.scaleLinear().range([200, 0]).domain([0, 0]);
+    let yAxis = d3.axisBottom().scale(y).ticks(1);
+
+    svg.append('g')
+        .attr("id", "map_key")
+        .attr("transform", "translate(600," + (height/2 + 110) + ")")
+        .call(yAxis);
+
+    function changeGradient(min, max) {
     	gradient.selectAll('stop').remove();
 
     	gradient.append('stop')
@@ -225,6 +236,18 @@
     	gradient.append('stop')
 	        .attr('stop-color', colors[cStat][2])
 	        .attr('offset', '1');
+
+        svg.selectAll('#map_key').remove();
+
+        let y = d3.scaleLinear().range([199, 0]).domain([max, min]);
+        let yAxis = d3.axisBottom(y)
+                        .tickValues([min, max])
+                        .tickFormat(d=>`${d3.format(",d")(d)}k bags`);
+
+        svg.append('g')
+            .attr("id", "map_key")
+            .attr("transform", "translate(600," + (height/2 + 110) + ")")
+            .call(yAxis);
     }
 
 
@@ -244,7 +267,8 @@
 
         if (selected.length == 1) {
             lineChart.draw(selected[0]);
-            // drawBarChart(selected[0]);
+            var elmnt = document.getElementById("selected");
+            elmnt.scrollIntoView({behavior: 'smooth'});
         } else if (selected.length > 1) {
             lineChart.hide();
         	barChart.update();
@@ -381,8 +405,6 @@
             addStockDescription();
         } else { removeStockDescription(); }
 
-        changeGradient();
-
         let min, max, rolledUp;
 
         [min, max, rolledUp] = rollupByYears();
@@ -390,6 +412,9 @@
         mapColors.domain([min[cStat], max[cStat]])
         svg.selectAll(".coffee")
             .style("fill", d => mapColors(rolledUp[d.name][cStat]) );
+
+        changeGradient(min[cStat], max[cStat]);
+
     }
 
 /*****************************************************************************

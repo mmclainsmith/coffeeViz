@@ -246,5 +246,9 @@ div.tooltip {
     width: 1000px;
 }
 #chart div {
-    display: inline-block;
+    display: inline-block;}
+
+#map_key .domain, #map_key .tick line {
+    stroke: var(--darkest-brown);
+    stroke-width: .5;
 }
