@@ -1,0 +1,235 @@
+@import url("https://fonts.googleapis.com/css?family=Caveat");
+@import url("https://fonts.googleapis.com/css?family=Mali");
+
+:root {
+  --darkest-brown: #4F2D0D;
+  --dark-brown: #7E685A;
+  --light-brown: #C2B9B0;
+  --light-green: #fcfcf6;
+  --green: #839153;
+  --b-grey: #B7CEEC; /* water */
+  --grey: gainsboro;
+  --time: .2s;
+}
+
+body {
+    background: var(--light-green);
+    text-align: center;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+h1 {
+    font-family: "Mali";
+    font-size: 64pt;
+    color: var(--darkest-brown);
+    margin: 0;
+    text-shadow: var(--light-brown) 2px 2px;
+}
+
+h2, h3 {
+    margin: 2px;
+}
+h2 {
+    font-weight: 300;
+}
+h3 {
+    color: var(--green);
+    font-weight: lighter;
+}
+
+h4 {
+    color: black;
+    font-weight: 300;
+    margin: 5px;
+}
+
+h5 {
+    font-weight: 300;
+    margin: 5px;
+}
+
+svg {
+    margin: 0 auto;
+    display: block;
+}
+
+div {
+    transition: var(--time);
+}
+
+a {
+    color: blue;
+}
+
+.graticule {
+    fill: none;
+    stroke: var(--darkest-brown);
+    stroke-width: .5px;
+    stroke-opacity: .5;
+    stroke-dasharray: 1,1;
+}
+
+.graticule, .domain, .tick, .monthFilterButton rect, .filled {
+    shape-rendering: crispEdges;
+}
+.country {
+    stroke: var(--darkest-brown);
+    stroke-width: .5px;
+    stroke-opacity: .5;
+    stroke-dasharray: 2,2;
+    transition: var(--time) fill;
+}
+.coffee {
+    stroke-dasharray: 1,0;
+}
+.unclickable {
+    stroke-dasharray: 2,2;
+    fill: var(--grey) !important;
+}
+
+.selected {
+    stroke: black;
+    stroke-width: 1px;
+    stroke-opacity: 1;
+}
+
+.line {
+    fill: none;
+    stroke-width: 2px;
+}
+
+.bar {
+    fill: var(--dark-brown);
+}
+
+#main {
+    background: var(--b-grey);
+    border-top: 1px solid var(--dark-brown);
+}
+
+.slideBar {
+    fill: var(--grey);
+}
+
+.monthFilterButton {
+    display: inline-block;
+    margin: 3px;
+    padding: 5px;
+    background-color: var(--light-brown);
+    text-align: center;
+    width: 5em;
+    color: var(--dark-brown);
+}
+
+.down {
+    background-color: var(--dark-brown);
+    color: black;
+}
+
+#catBtns {
+    display: flex;
+    width: 980px;
+    margin: 0 auto;
+}
+
+.catFilterButton {
+    flex-grow: 1;
+    margin: 0;
+    padding: 5px 0;
+    box-sizing: border-box;
+    background-color: var(--light-brown);
+    color: var(--dark-brown);
+}
+.catFilterButton.down {
+    color: white;
+}
+
+.catFilterButton:hover{
+    filter: brightness(90%);
+}
+
+.sliderBrush .selection {
+    fill: var(--green);
+    fill-opacity: 0.6;
+    stroke: none;
+}
+
+.extent {
+    fill: var(--green);
+    fill-opacity: 0.2;
+    stroke: none;
+}
+
+.sliderBrush .handle--e, .sliderBrush .handle--w {
+    fill: var(--dark-brown);
+}
+
+.sliderBrush .selection:active {
+    cursor: grabbing;
+}
+
+#sliderAxis text {
+    fill: var(--darkest-brown);
+}
+
+#sliderLines .tick line,  #sliderAxis .tick line {
+    stroke: var(--dark-brown) !important;
+    stroke-dasharray: 1,1;
+    opacity: 0.7;
+}
+
+#sliderLines .domain, #sliderAxis .domain{
+    stroke: none !important;
+}
+
+.monthFilterButton rect{
+    fill: var(--grey);
+    stroke: var(--dark-brown);
+    stroke-width: .5px;
+    stroke-opacity:
+}
+
+.monthFilterButton text{
+    fill: var(--light-brown);
+}
+
+.monthFilterButton.down rect{
+    fill: var(--light-brown);
+}
+
+.monthFilterButton.down text{
+    fill: var(--dark-brown);
+}
+
+text.harvest {
+    fill: var(--dark-brown);
+}
+
+#selected a {
+    font-family: "Mali";
+    font-weight: bold;
+    display: inline-block;
+    margin: 10px;
+    color: black;
+}
+
+div.tooltip {
+  position: absolute;
+  text-align: center;
+  width: 100px;
+  height: 40px;
+  padding: 5px;
+  font: 12px sans-serif;
+  background: var(--grey);
+  border: 0px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.filled {
+    fill: url(#gradient);
+    stroke: var(--dark-brown);
+    stroke-opacity: .5;
+    stroke-width: .5;
+}
