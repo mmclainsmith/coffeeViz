@@ -28,7 +28,7 @@
 <svg id="slider"></svg>
 <div id="selected"></div>
 <svg id="graph"></svg>
-<svg id="chart"></svg>
+<div id="chart"></div>
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
@@ -36,6 +36,14 @@
 
 <script>
     let clean = s => s.replace(/\W/g, '');
+
+    let simple = n => {
+        let s = n;
+        if (n == "Democratic Republic of the Congo") {
+            s = "DR Congo";
+        }
+        return s;
+    }
 
     let infoByCat = (func, data) => {
         return d3.nest()
@@ -54,7 +62,7 @@
     let lineChart;
     let barChart;
 
-    let catAbvs = {"Production":"prod", "Export":"export", "Consumption":"consum", "Stock":"stock"};
+    let statAbvs = {"Production":"prod", "Export":"export", "Consumption":"consum", "Stock":"stock"};
     let month_abv = {"April":"apr", "July":"jul", "October":"oct"};
     let stats = ["prod", "consum", "export", "stock"];
 
@@ -144,14 +152,8 @@
                 	if (!(d3.select(this).classed("unclickable"))) {
                 		let min, max, rolledUp;
                 		[min, max, rolledUp] = rollupByYears();
-                        let name;
-                        if (d.name == "Democratic Republic of the Congo") {
-                            name = "DR Congo";
-                        } else {
-                            name = d.name;
-                        }
 	                	div.transition().duration(200).style("opacity", 0.9);
-	                	div.html("<b>"+ name + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + "k bags")
+	                	div.html("<b>"+ simple(d.name) + "</b>" + "<br/>" + d3.format(",d")(rolledUp[d.name][cStat]) + "k bags")
 	                		.style("left", (d3.event.pageX + 10) + "px")
 	                		.style("top", (d3.event.pageY - 28) + "px");
                 	}
@@ -180,7 +182,7 @@
         d3.select(".catFilterButton#prod").style("background-color", colors.prod[0])
 
         lineChart = new LineChart();
-        barChart = new BarChart();
+        barChart = new BarChartTotal();
 
         makeSlider();
         makeMonthSelectors();
@@ -201,7 +203,7 @@
     gradient.append('stop')
         .attr('stop-color', colors.prod[1])
         .attr('offset', '0');
-    console.log(colors.prod)
+
     gradient.append('stop')
         .attr('offset', '1')
         .attr('stop-color', colors.prod[2]);
@@ -463,15 +465,15 @@
                     .lower()
 
             // add legend
-            let legendScale = d3.scaleBand().padding(.5).domain(Object.keys(catAbvs)).range([10, 10 + 50 * 4])
+            let legendScale = d3.scaleBand().padding(.5).domain(Object.keys(statAbvs)).range([10, 10 + 50 * 4])
 
-            Object.keys(catAbvs).forEach( s => {
+            Object.keys(statAbvs).forEach( s => {
                 this.svg.append("rect")
                     .attr("x", this.width + this.margin.left + 45 )
     				.attr("y", legendScale(s))
     				.attr("width", 20)
     				.attr("height", legendScale.bandwidth())
-    				.attr("fill", colors[catAbvs[s]][0]);
+    				.attr("fill", colors[statAbvs[s]][0]);
 
     			this.svg.append("text")
                     .attr("x", this.width + this.margin.left + 55 )
@@ -516,64 +518,103 @@
     }
 
     class BarChart {
-        constructor() {
-            this.margin = {top: 20, right: 100, bottom: 30, left: 150};
-            this.width = 960 - this.margin.left - this.margin.right;
-            this.height = 600 - this.margin.top - this.margin.bottom;
+        constructor(stat, svg, yAxis) {
+            this.margin = {top: 20, right: 100, bottom: 40, left: 200};
+            this.width = 480 - this.margin.left - this.margin.right;
 
-            this.svg = d3.select("#chart")
-                .attr("width", this.width + this.margin.right + this.margin.left)
-                .attr("height", this.height + this.margin.top + this.margin.bottom);
+            this.stat = stat;
+
+            this.svg = svg
+            this.svg.attr("width", this.width + this.margin.right + this.margin.left)
 
             this.graph = this.svg.append("g")
                     .attr("transform", `translate( ${this.margin.left}, ${this.margin.top})`);
 
-
-
-            let _min, _max, rolledUp;
-            [_min, _max, rolledUp] = rollupByYears();
-
-            this.data = Object.entries(rolledUp)
-                         //.filter(d => selected.includes(d[0]));
-
-
-            this.y = d3.scaleBand().padding(0.1).domain(selected).range([0, 0]);
-
-        //    let maxObj = infoByCat((s, d) => d3.max(d, d2 => d2[1][s]), this.data);
-
-
-            this.x = {};
-            stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]))
-
-            this.charts = {}
-            for (let stat in catAbvs) {
-                //char
-            }
-
-            this.graph.append("text")
-            	.attr("transform", `translate( ${(this.width/2)}, 0)`)
-            	.style("text-anchor", "middle")
-            	.text("Production in 2017");
-
             this.yAxis = this.graph.append("g");
-            this.yAxis.call(d3.axisLeft(this.y));
+            this.yAxis.call(d3.axisLeft(yAxis));
 
         }
 
+        update(data, yAxis, xAxis) {
+            this.svg.transition().attr("height", (selected.length) * 20 + this.margin.top + this.margin.bottom);
+            this.bars = this.graph.selectAll(".bar").data(data, d => d);
+
+            let t = d3.transition().duration(500).ease(d3.easePolyInOut)
+
+            let addBars = () => {
+                this.bars.enter()
+                        .append("rect")
+                        .attr("class", "bar")
+                        .attr("height", yAxis.bandwidth())
+                        .attr("x", 0)
+                        .style("fill", colors[this.stat][0])
+                        .attr("y", d => yAxis(d[0]))
+                        .attr("title", d => d[0])
+                        .transition(t)
+                        .attr("width", d => xAxis(d[1][this.stat]) );
+
+                this.bars
+                    .attr("y", d => yAxis(d[0]))
+                    .attr("title", d => d[0])
+                    .transition(t)
+                    .attr("width", d => xAxis(d[1][this.stat]) );
+            }
+
+            let adjustAxis = () => {
+                this.yAxis
+                    .transition(t)
+                    .call(d3.axisLeft(yAxis).tickFormat(d => simple(d)))
+                    .on("end", addBars());
+            }
+
+
+            this.bars
+                .exit()
+                .transition(t)
+                .attr("width", 0)
+                .remove()
+                .on("end", adjustAxis() );
+
+        }
+    }
+
+    class BarChartTotal {
+        constructor() {
+            this.div= d3.select("#chart")
+
+            this.x = {};
+            stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]).range([0, 600]));
+
+            this.y = d3.scaleBand().padding(0.1).domain(selected).range([0, 0]);
+
+            this.charts = {}
+            for (let stat in statAbvs) {
+                let div = this.div
+                    .append("div")
+
+                div.append("h5")
+                    .text( stat )
+                let svg = div.append("svg")
+
+                this.charts[statAbvs[stat]] = new BarChart(statAbvs[stat], svg, this.y)
+            }
+        }
+
         update(){
+            let _min, _max, rolledUp;
+            [_min, _max, rolledUp] = rollupByYears();
+            let data = Object.entries(rolledUp).filter(d => selected.includes(d[0]));
+
             this.y.range([0, selected.length * 20]);
             this.y.domain(selected);
-            this.yAxis.transition().call(d3.axisLeft(this.y));
 
+            let maxByStat = infoByCat((s, d) => d3.max(d, d2 => d2[1][s] ), data);
 
-            // this.graph.selectAll(".bar")
-            //     .data( this.data )
-            // 	.enter().append("rect")
-            // 		.attr("class", "bar")
-            // 		.attr("y", d => this.y(d[0]) + this.margin.top)
-            // 		.attr("height", this.y.bandwidth())
-            // 		.attr("x", this.margin.left)
-            // 		.attr("width", d => this.x.prod(d[1].prod));
+            stats.forEach(s => {
+                this.x[s].domain([0, maxByStat[s]]);
+                this.charts[s].update(data, this.y, this.x[s]);
+            });
+
 
             // graph.append("text")
             // 	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
@@ -637,7 +678,7 @@
             .call(d3.axisBottom(yearScale)
                     .tickSize(slider.height - slider.mTop * 2)
                     .ticks(20)
-                    .tickFormat(function() { return null; })
+                    .tickFormat( () => null )
                 );
 
         let sliderBrush = d3.brushX()

@@ -233,3 +233,18 @@ div.tooltip {
     stroke-opacity: .5;
     stroke-width: .5;
 }
+
+
+#chart .tick line, #chart .domain {
+    stroke: none;
+}
+
+#chart {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    width: 1000px;
+}
+#chart div {
+    display: inline-block;
+}
