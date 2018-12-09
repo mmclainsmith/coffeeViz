@@ -209,11 +209,19 @@
     svg.append('rect')
         .classed('filled', true)
         .attr('x', 600)
-        .attr('y', height/2 + 100)
+        .attr('y', height/2 + 90)
         .attr('width', 200)
         .attr('height', 20);
 
-    function changeGradient() {
+    let y = d3.scaleLinear().range([200, 0]).domain([0, 0]);
+    let yAxis = d3.axisBottom().scale(y).ticks(1);
+
+    svg.append('g')
+        .attr("id", "map_key")
+        .attr("transform", "translate(600," + (height/2 + 110) + ")")
+        .call(yAxis);
+
+    function changeGradient(min, max) {
     	gradient.selectAll('stop').remove();
 
     	gradient.append('stop')
@@ -223,6 +231,18 @@
     	gradient.append('stop')
 	        .attr('stop-color', colors[cStat][2])
 	        .attr('offset', '1');
+
+        svg.selectAll('#map_key').remove();
+
+        let y = d3.scaleLinear().range([200, 0]).domain([max, min]);
+        let yAxis = d3.axisBottom(y)
+                        .tickValues([min, max])
+                        .tickFormat(d=>`${d3.format(",d")(d)}k bags`);
+
+        svg.append('g')
+            .attr("id", "map_key")
+            .attr("transform", "translate(600," + (height/2 + 110) + ")")
+            .call(yAxis);
     }
 
 
@@ -380,8 +400,6 @@
             addStockDescription();
         } else { removeStockDescription(); }
 
-        changeGradient();
-
         let min, max, rolledUp;
 
         [min, max, rolledUp] = rollupByYears();
@@ -389,6 +407,9 @@
         mapColors.domain([min[cStat], max[cStat]])
         svg.selectAll(".coffee")
             .style("fill", d => mapColors(rolledUp[d.name][cStat]) );
+
+        changeGradient(min[cStat], max[cStat]);
+
     }
 
 /*****************************************************************************
@@ -698,7 +719,6 @@
 
             for (let country in dataByCountry){
                 let id = `path#${clean(country)}`;
-                console.log(id);
                 let visible = !d3.select(id).classed("unclickable");
                 rolledUp[country] =  d3.nest()
                         .rollup(d => {
