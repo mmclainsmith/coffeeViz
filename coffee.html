@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <title>Coffee</title>
+
 <link rel="stylesheet" type="text/css" href="style.css">
+
 </head>
 
 <body>
@@ -19,7 +21,7 @@
     <div class ="catFilterButton stock" id="stock"> Opening Stock </div>
 </div>
 <svg width="980" height="270" id="main"></svg>
-
+<div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
 <svg id="graph"></svg>
@@ -36,9 +38,9 @@
     let infoByCat = (func, data) => {
         return d3.nest()
             .rollup(d => {
-            let data = {}
-                stats.forEach( s => { data[s] = func(s, d) });
-            return data
+                let dataR = {}
+                    stats.forEach( s => { dataR[s] = func(s, d) });
+                return dataR
         }).entries(data);
     }
 
@@ -50,9 +52,17 @@
     let lineChart;
     let barChart;
 
-    let catAbvs = {"Production":"prod", "Export":"exp", "Consumption":"consum", "Stock":"stock"};
+    let catAbvs = {"Production":"prod", "Export":"export", "Consumption":"consum", "Stock":"stock"};
     let month_abv = {"April":"apr", "July":"jul", "October":"oct"};
     let stats = ["prod", "consum", "export", "stock"];
+
+    // COLORS
+    let colors = {
+        "consum": ["#4F2D0D", "#fee6ce", "#4F2D0D"],
+        "export": ["#1F45FC", "#deebf7", "#0000A0"],
+        "prod": ["#348017", "#f7fcf5", "#254117"],
+        "stock": ["#990012", "#fff5f0", "#a50f15"]
+    }
 
 
     // This is horrifying, forgive me Mark.
@@ -156,10 +166,16 @@
         d3.selectAll(".catFilterButton")
             .on("click", function(d) {
                 cStat = d3.select(this).attr("id");
-                d3.selectAll(".catFilterButton").classed("down", false);
-                d3.select(this).classed("down", true);
+                d3.selectAll(".catFilterButton")
+                    .classed("down", false)
+                    .style("background-color", null);
+                d3.select(this)
+                    .classed("down", true)
+                    .style("background-color", colors[cStat][0]);
                 colorMap();
             });
+
+        d3.select(".catFilterButton#prod").style("background-color", colors.prod[0])
 
         lineChart = new LineChart();
         barChart = new BarChart();
@@ -167,9 +183,46 @@
         makeSlider();
         makeMonthSelectors();
         colorMap();
-        //makeBarChart();
+	};
 
-    };
+    // Map legend -- gradient courtesy of http://bl.ocks.org/pnavarrc/20950640812489f13246
+    // Updating aspect of gradient courtesy of LEXIE'S STRUGGLING
+
+    var newsvg = d3.select("#svg-container").append('svg');
+    newsvg.attr('width', width).attr('height', 0);
+
+    var svgDefs = newsvg.append('defs');
+
+    var gradient = svgDefs.append('linearGradient')
+        .attr('id', 'gradient');
+
+    gradient.append('stop')
+        .attr('stop-color', colors.prod[1])
+        .attr('offset', '0');
+    console.log(colors.prod)
+    gradient.append('stop')
+        .attr('offset', '1')
+        .attr('stop-color', colors.prod[2]);
+
+    svg.append('rect')
+        .classed('filled', true)
+        .attr('x', 600)
+        .attr('y', height/2 + 100)
+        .attr('width', 200)
+        .attr('height', 20);
+
+    function changeGradient() {
+    	gradient.selectAll('stop').remove();
+
+    	gradient.append('stop')
+	        .attr('stop-color', colors[cStat][1])
+	        .attr('offset', '0');
+
+    	gradient.append('stop')
+	        .attr('stop-color', colors[cStat][2])
+	        .attr('offset', '1');
+    }
+
 
 /*****************************************************************************
                 Interactions Handlers
@@ -318,31 +371,23 @@
     }
 
 /*******************************  Color Map **********************************/
-    let color_consum = "#4F2D0D";
-    let color_export = "#1F45FC";
-    let color_prod = "#348017";
-    let color_stock = "#990012";
-
-    let mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]);
 
     function colorMap(){
-    	if (cStat == "consum") { mapColors = d3.scaleLinear().range(["#fee6ce", color_consum]); }
-    	if (cStat == "export") { mapColors = d3.scaleLinear().range(["#deebf7", "#0000A0"]); }
-    	if (cStat == "prod") { mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]); }
+        let mapColors =  d3.scaleLinear().range([colors[cStat][1], colors[cStat][2]]);
+
     	if (cStat == "stock") {
             addStockDescription();
-            mapColors = d3.scaleLinear().range(["#fff5f0", "#a50f15"]);
-        } else {
-            removeStockDescription();
-        }
+        } else { removeStockDescription(); }
+
+        changeGradient();
 
         let min, max, rolledUp;
 
         [min, max, rolledUp] = rollupByYears();
 
-        let colors = mapColors.domain([min[cStat], max[cStat]])
+        mapColors.domain([min[cStat], max[cStat]])
         svg.selectAll(".coffee")
-            .style("fill", d => colors(rolledUp[d.name][cStat]) );
+            .style("fill", d => mapColors(rolledUp[d.name][cStat]) );
     }
 
 /*****************************************************************************
@@ -353,7 +398,7 @@
         constructor() {
             this.data = {}
 
-            this.margin = {top: 20, right: 105, bottom: 30, left: 70},
+            this.margin = {top: 20, right: 105, bottom: 40, left: 70},
                           this.width = 980 - this.margin.left - this.margin.right,
                           this.height = 300 - this.margin.top - this.margin.bottom;
 
@@ -380,7 +425,8 @@
                 this.linePaths[stat] = this.graph.append("path")
     	            .data([dataByCountry["Angola"]])
     	            .attr("class", "line " + stat)
-    	            .attr("d", this.lines[stat]);
+    	            .attr("d", this.lines[stat])
+                    .attr("stroke", colors[stat][0]);
             }
 
             // add X axis
@@ -389,8 +435,8 @@
                 .call(d3.axisBottom(this.x).tickFormat(d3.format("d")));
 
             // label X axis
-            this.graph.append("text")
-            	.attr("transform", `translate( ${this.width/2 + 18}, ${this.height + this.margin.top + 40} )`)
+            this.svg.append("text")
+            	.attr("transform", `translate( ${width/2}, ${this.height + this.margin.top + this.margin.bottom } )`)
             	.style("text-anchor", "middle")
             	.text("Year");
 
@@ -417,8 +463,6 @@
                     .lower()
 
             // add legend
-            var colors = [color_prod, color_consum, color_export, color_stock];
-
             let legendScale = d3.scaleBand().padding(.5).domain(Object.keys(catAbvs)).range([10, 10 + 50 * 4])
 
             Object.keys(catAbvs).forEach( s => {
@@ -427,7 +471,7 @@
     				.attr("y", legendScale(s))
     				.attr("width", 20)
     				.attr("height", legendScale.bandwidth())
-    				.attr("fill", "black");
+    				.attr("fill", colors[catAbvs[s]][0]);
 
     			this.svg.append("text")
                     .attr("x", this.width + this.margin.left + 55 )
@@ -487,8 +531,7 @@
 
 
             let _min, _max, rolledUp;
-            [_min, _max, rolledUp] = rollupByYears()
-            console.log(rolledUp)
+            [_min, _max, rolledUp] = rollupByYears();
 
             this.data = Object.entries(rolledUp)
                          //.filter(d => selected.includes(d[0]));
@@ -530,6 +573,11 @@
             // 		.attr("height", this.y.bandwidth())
             // 		.attr("x", this.margin.left)
             // 		.attr("width", d => this.x.prod(d[1].prod));
+
+            // graph.append("text")
+            // 	.attr("transform", "translate(" + (width/2) + "," + (height + margin.top + 20) + ")")
+            // 	.style("text-anchor", "middle")
+            // 	.text("Year");
 
         }
 

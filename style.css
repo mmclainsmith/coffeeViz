@@ -10,11 +10,6 @@
   --b-grey: #B7CEEC; /* water */
   --grey: gainsboro;
   --time: .2s;
-
-  --color_consum: #4F2D0D;
-  --color_export: #1F45FC;
-  --color_prod: #348017;
-  --color_stock: #990012;
 }
 
 body {
@@ -75,7 +70,7 @@ a {
     stroke-dasharray: 1,1;
 }
 
-.graticule, .domain, .tick, .monthFilterButton rect {
+.graticule, .domain, .tick, .monthFilterButton rect, .filled {
     shape-rendering: crispEdges;
 }
 .country {
@@ -103,10 +98,6 @@ a {
     fill: none;
     stroke-width: 2px;
 }
-.line.consum { stroke: var(--color_consum); }
-.line.export { stroke: var(--color_export); }
-.line.prod { stroke: var(--color_prod); }
-.line.stock { stroke: var(--color_stock); }
 
 .bar {
     fill: var(--dark-brown);
@@ -151,13 +142,8 @@ a {
     color: var(--dark-brown);
 }
 .catFilterButton.down {
-    background-color: var(--green);
     color: white;
 }
-.catFilterButton.down.consum { background-color: var(--color_consum); }
-.catFilterButton.down.export { background-color: var(--color_export); }
-.catFilterButton.down.prod { background-color: var(--color_prod); }
-.catFilterButton.down.stock { background-color: var(--color_stock); }
 
 .catFilterButton:hover{
     filter: brightness(90%);
@@ -239,4 +225,11 @@ div.tooltip {
   border: 0px;
   border-radius: 8px;
   pointer-events: none;
+}
+
+.filled {
+    fill: url(#gradient);
+    stroke: var(--dark-brown);
+    stroke-opacity: .5;
+    stroke-width: .5;
 }
