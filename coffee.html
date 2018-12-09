@@ -601,9 +601,7 @@
     let mapColors = d3.scaleLinear().range(["#f7fcf5", "#254117"]);
 
     function colorMap(){
-    	if (cStat == "consum") { 
-    		mapColors = d3.scaleLinear().range([color_consum1, color_consum2]); 
-    	}
+    	if (cStat == "consum") { mapColors = d3.scaleLinear().range([color_consum1, color_consum2]); }
     	if (cStat == "export") { mapColors = d3.scaleLinear().range([color_export1, color_export2]); }
     	if (cStat == "prod") { mapColors = d3.scaleLinear().range([color_prod1, color_prod2]); }
     	if (cStat == "stock") {
