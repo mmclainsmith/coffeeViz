@@ -245,7 +245,7 @@ div.tooltip {
     align-content: center;
     width: 1000px;
     margin: 0 auto;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 #chart div {
     display: inline-block;

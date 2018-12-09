@@ -271,11 +271,13 @@
 
         if (selected.length == 1) {
             lineChart.draw(selected[0]);
+            barChart.hide();
         } else if (selected.length > 1) {
             lineChart.hide();
         	barChart.update();
         } else {
             lineChart.hide();
+            barChart.hide();
         }
         let elmnt = document.getElementById("selected");
         elmnt.scrollIntoView({behavior: 'smooth'});
@@ -609,7 +611,7 @@
 
     class BarChartTotal {
         constructor() {
-            this.div= d3.select("#chart")
+            this.div= d3.select("#chart").style("display", "none")
 
             this.x = {};
             stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]).range([0, 600]));
@@ -630,6 +632,7 @@
         }
 
         update(){
+            this.div.style("display", null);
             let _min, _max, rolledUp;
             [_min, _max, rolledUp] = rollupByYears();
             let data = Object.entries(rolledUp).filter(d => selected.includes(d[0]));
@@ -652,6 +655,9 @@
 
         }
 
+        hide() {
+            this.div.style("display", "none");
+        }
     }
 
 
