@@ -244,9 +244,12 @@ div.tooltip {
     flex-wrap: wrap;
     align-content: center;
     width: 1000px;
+    margin: 0 auto;
+    margin-bottom: 10px;
 }
 #chart div {
-    display: inline-block;}
+    display: inline-block;
+}
 
 #map_key .domain, #map_key .tick line {
     stroke: var(--darkest-brown);

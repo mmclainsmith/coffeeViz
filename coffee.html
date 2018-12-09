@@ -27,13 +27,8 @@
 <div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
-<<<<<<< HEAD
-<svg id="graph"></svg>
-<div id="chart"></div>
-=======
 <svg id="graph"></svg> <!-- line graph -->
-<svg id="chart"></svg>
->>>>>>> 1c09ce7094f1b70121f6348de431ce595abd4452
+<div id="chart"></div>
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
@@ -544,7 +539,7 @@
 
     class BarChart {
         constructor(stat, svg, yAxis) {
-            this.margin = {top: 20, right: 100, bottom: 40, left: 200};
+            this.margin = {top: 0, right: 0, bottom: 0, left: 100};
             this.width = 480 - this.margin.left - this.margin.right;
 
             this.stat = stat;
@@ -649,21 +644,6 @@
         }
 
     }
-
-    function drawBarChart(countryName) {
-
-
-
-        let graph = svg2.attr("width", width + margin.left + margin.right)
-            .attr("height", 1000)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-
-        // add Y axis
-
-    }
-
 
 
 /*****************************************************************************
