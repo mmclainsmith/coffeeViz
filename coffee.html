@@ -27,7 +27,7 @@
 <div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
-<svg id="graph"></svg>
+<svg id="graph"></svg> <!-- line graph -->
 <svg id="chart"></svg>
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
@@ -201,7 +201,7 @@
     gradient.append('stop')
         .attr('stop-color', colors.prod[1])
         .attr('offset', '0');
-    console.log(colors.prod)
+
     gradient.append('stop')
         .attr('offset', '1')
         .attr('stop-color', colors.prod[2]);
@@ -242,7 +242,8 @@
 
         if (selected.length == 1) {
             lineChart.draw(selected[0]);
-            // drawBarChart(selected[0]);
+            var elmnt = document.getElementById("selected");
+            elmnt.scrollIntoView({behavior: 'smooth'});
         } else if (selected.length > 1) {
             lineChart.hide();
         	barChart.update();
