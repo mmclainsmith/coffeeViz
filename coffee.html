@@ -591,6 +591,7 @@
 
                 this.text
                     .transition(t)
+                    .text( d => `${d3.format(",d")(d[1][this.stat])}k bags` )
                     .attr("x", d => xAxis(d[1][this.stat]) )
                     .attr("y", d => yAxis(d[0]))
 
@@ -739,7 +740,8 @@
 
             startYear = d1[0];
             endYear = d1[1];
-            lineChart.updateExtent()
+            lineChart.updateExtent();
+            barChart.update();
             colorMap();
         }
 
