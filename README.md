@@ -10,3 +10,4 @@ TODO:
     Linking for selection/back to previous selection
     legend for map!
     tooltips
+    force scroll down
