@@ -373,9 +373,6 @@
 /*******************************  Color Map **********************************/
 
     function colorMap(){
-    	if (cStat == "consum") { mapColors = d3.scaleLinear().range([color_consum1, color_consum2]); }
-    	if (cStat == "export") { mapColors = d3.scaleLinear().range([color_export1, color_export2]); }
-    	if (cStat == "prod") { mapColors = d3.scaleLinear().range([color_prod1, color_prod2]); }
         let mapColors =  d3.scaleLinear().range([colors[cStat][1], colors[cStat][2]]);
     	if (cStat == "stock") {
             addStockDescription();
