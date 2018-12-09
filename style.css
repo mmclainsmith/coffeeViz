@@ -255,3 +255,7 @@ div.tooltip {
     stroke: var(--darkest-brown);
     stroke-width: .5;
 }
+
+.amount {
+    font-size: 10px;
+}

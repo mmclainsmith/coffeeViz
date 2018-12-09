@@ -171,7 +171,6 @@
                 .on("click", d => d3.event.stopPropagation() )
                 .call(d3.drag()
                     .on("start", startCountrySelect)
-                    .on("drag", dragCountrySelect)
                     .on("end", endCountrySelect));
 
         d3.selectAll(".catFilterButton")
@@ -302,10 +301,6 @@
     function startCountrySelect(d){
         d3.select("#main")
             .append("rect");
-    }
-
-    function dragCountrySelect(d){
-        //console.log("dragging");
     }
 
     function endCountrySelect(d){
@@ -549,14 +544,14 @@
     }
 
     class BarChart {
-        constructor(stat, svg, yAxis) {
-            this.margin = {top: 0, right: 0, bottom: 0, left: 100};
-            this.width = 480 - this.margin.left - this.margin.right;
+        constructor(stat, svg, yAxis, width) {
+            this.margin = {top: 0, right: 70, bottom: 0, left: 70};
+            this.width = width + this.margin.left + this.margin.right;
 
             this.stat = stat;
 
             this.svg = svg
-            this.svg.attr("width", this.width + this.margin.right + this.margin.left)
+            this.svg.attr("width", this.width)
 
             this.graph = this.svg.append("g")
                     .attr("transform", `translate( ${this.margin.left}, ${this.margin.top})`);
@@ -569,6 +564,7 @@
         update(data, yAxis, xAxis) {
             this.svg.transition().attr("height", (selected.length) * 20 + this.margin.top + this.margin.bottom);
             this.bars = this.graph.selectAll(".bar").data(data, d => d);
+            this.text = this.graph.selectAll(".amount").data(data, d => d);
 
             let t = d3.transition().duration(500).ease(d3.easePolyInOut)
 
@@ -584,6 +580,22 @@
                         .transition(t)
                         .attr("width", d => xAxis(d[1][this.stat]) );
 
+                this.text.enter()
+                        .append("text")
+                        .attr("class", "amount")
+                        .attr("y", d => yAxis(d[0]))
+                        .attr("dy", "1.3em")
+                        .attr("dx", ".35em")
+                        .attr("x", d => xAxis(d[1][this.stat]) )
+                        .transition(t)
+                        .text( d => `${d3.format(",d")(d[1][this.stat])}k bags` )
+
+                this.text
+                    .transition(t)
+                    .attr("x", d => xAxis(d[1][this.stat]) )
+                    .attr("y", d => yAxis(d[0]))
+
+
                 this.bars
                     .attr("y", d => yAxis(d[0]))
                     .attr("title", d => d[0])
@@ -598,6 +610,10 @@
                     .on("end", addBars());
             }
 
+            this.text
+                .exit()
+                .transition(t)
+                .remove()
 
             this.bars
                 .exit()
@@ -612,9 +628,9 @@
     class BarChartTotal {
         constructor() {
             this.div= d3.select("#chart").style("display", "none")
-
+            let width = 350;
             this.x = {};
-            stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]).range([0, 600]));
+            stats.forEach(s => this.x[s] = d3.scaleLinear().domain([0, 0]).range([0, width]));
 
             this.y = d3.scaleBand().padding(0.1).domain(selected).range([0, 0]);
 
@@ -627,7 +643,7 @@
                     .text( stat )
                 let svg = div.append("svg")
 
-                this.charts[statAbvs[stat]] = new BarChart(statAbvs[stat], svg, this.y)
+                this.charts[statAbvs[stat]] = new BarChart(statAbvs[stat], svg, this.y, width)
             }
         }
 
