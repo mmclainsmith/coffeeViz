@@ -696,6 +696,7 @@
 
             for (let country in dataByCountry){
                 let id = `path#${clean(country)}`;
+                console.log(id);
                 let visible = !d3.select(id).classed("unclickable");
                 rolledUp[country] =  d3.nest()
                         .rollup(d => {
