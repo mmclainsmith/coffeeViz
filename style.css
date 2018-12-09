@@ -169,7 +169,7 @@ a {
     cursor: grabbing;
 }
 
-#sliderAxis text {
+text {
     fill: var(--darkest-brown);
 }
 
