@@ -167,7 +167,7 @@
                 .on("mouseout", function (d) {
                 	div.transition().duration(500).style("opacity", 0);
                 })
-                .on("click", d => d3.event.stopPropagation() )
+                .on("click", d => d3.event.stopPropagation())
                 .call(d3.drag()
                     .on("start", startCountrySelect)
                     .on("end", endCountrySelect));
