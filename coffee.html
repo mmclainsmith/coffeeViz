@@ -58,9 +58,9 @@
 
     // COLORS
     let colors = {
-        "consum": ["#4F2D0D", "#fee6ce", "#4F2D0D"],
+        "consum": ["#613f22", "#fee6ce", "#613f22"],
         "export": ["#1F45FC", "#deebf7", "#0000A0"],
-        "prod": ["#348017", "#f7fcf5", "#254117"],
+        "prod": ["#5b6e1c", "#f7fcf5", "#5b6e1c"],
         "stock": ["#990012", "#fff5f0", "#a50f15"]
     }
 
@@ -559,6 +559,7 @@
             this.yAxis.call(d3.axisLeft(this.y));
 
         }
+
         update(){
             this.y.range([0, selected.length * 20]);
             this.y.domain(selected);
