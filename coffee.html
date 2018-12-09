@@ -27,13 +27,8 @@
 <div id="svg-container"></div>
 <svg id="slider"></svg>
 <div id="selected"></div>
-<<<<<<< HEAD
-<svg id="graph"></svg>
-<div id="chart"></div>
-=======
 <svg id="graph"></svg> <!-- line graph -->
 <svg id="chart"></svg>
->>>>>>> 1c09ce7094f1b70121f6348de431ce595abd4452
 
 <h5> Data sources: <a link href = "http://www.ico.org/">The International Coffee Organization</a> and <a link href = "https://www.kaggle.com/sbajew/exploring-coffee-production-and-consumption/data">Kaggle</a>.</h5>
 
@@ -44,6 +39,15 @@
         let s = n;
         if (n == "Democratic Republic of the Congo") {
             s = "DR Congo";
+        }
+        if (n == "Republic of the Congo") {
+            s = "Congo";
+        }
+        if (n == "United Republic of Tanzania") {
+            s = "Tanzania";
+        }
+        if (n == "Central African Republic") {
+            s = "CAR";
         }
         return s;
     }
