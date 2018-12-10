@@ -13,7 +13,7 @@
 
 <body>
 <h1> Coffee </h1>
-<h2> A look at coffee production around the world </h2>
+<h2> A look at coffee exporters around the world </h2>
 <h3> Lexie Kirsch and Morgan McLain-Smith </h3>
 <h4> Note: Units are per thousand 60kg bags of unroasted coffee. </h4>
 
@@ -272,6 +272,7 @@
             barChart.hide();
         } else if (selected.length > 1) {
             lineChart.hide();
+            barChart.show();
         	barChart.update();
         } else {
             lineChart.hide();
@@ -647,8 +648,11 @@
             }
         }
 
-        update(){
+        show(){
             this.div.style("display", null);
+        }
+
+        update(){
             let _min, _max, rolledUp;
             [_min, _max, rolledUp] = rollupByYears();
             let data = Object.entries(rolledUp).filter(d => selected.includes(d[0]));
